@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机票付款上传凭证 | 星耀售票</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#f7f8fa}
+nav{background:#0a0e17;padding:14px 16px}
+nav a{color:#fff;text-decoration:none}
+.container{max-width:520px;margin:30px auto;padding:0 14px;text-align:center}
+.qr-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:24px}
+.tip-red{color:#ef4444;margin:10px 0;font-size:14px}
+.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:36px 16px;margin:20px 0;color:#6366f1}
+.preview{max-width:100%;max-height:220px;border-radius:10px;margin:10px 0;display:none}
+.tip-text{margin:8px 0;font-size:14px}
+.btn-sub{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px}
+</style>
+</head>
+<body>
+<nav><a href="javascript:history.back()">← 返回</a></nav>
+<div class="container">
+  <h3>机票订单号：<span id="orderNo"></span></h3>
+  <div class="qr-card">
+    <p>AlipayHK / 支付宝转账支付</p>
+    <p class="tip-red">转账备注订单号，上传转账截图核对</p>
+    <img src="你的收款码链接" width="240" alt="收款二维码">
+  </div>
+
+  <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+    <p>点击相册，上传转账凭证截图</p>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" style="display:none">
+  <img class="preview" id="previewImg">
+  <p class="tip-text" id="tipText"></p>
+
+  <button class="btn-sub" onclick="submitFlightPay()">提交凭证</button>
+</div>
+<script>
+const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+const IMGBB_KEY = "6d207e02198a847aa98d0a2a901485a5";
+const urlParams = new URLSearchParams(location.search);
+const orderNo = urlParams.get("orderNo");
+document.getElementById("orderNo").innerText = orderNo;
+let imgUrl = "";
+const fileInput = document.getElementById("fileInput");
+const previewImg = document.getElementById("previewImg");
+const tipText = document.getElementById("tipText");
+
+fileInput.onchange = async function(e){
+  const f = e.target.files[0];
+  if(!f)return;
+  tipText.innerText="上传中...";
+  const fd = new FormData();
+  fd.append("image",f);
+  fd.append("key",IMGBB_KEY);
+  try{
+    const res = await fetch("https://api.imgbb.com/upload",{method:"POST",body:fd});
+    const json = await res.json();
+    imgUrl = json.data.image.url;
+    previewImg.src=imgUrl;previewImg.style.display="block";
+    tipText.innerText="图片上传完成";
+  }catch(err){
+    tipText.innerText="上传失败，切换5G重试";
+  }
+}
+async function submitFlightPay(){
+  if(!imgUrl){alert("请上传截图");return;}
+  const res = await fetch(`${API_BASE}/api/upload-flight-pay`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({orderNo,imgUrl})
+  });
+  const data = await res.json();
+  if(data.success){
+    alert("提交成功，等待商家核验！");
+    location.href="/mine.html";
+  }
+}
+</script>
+</body>
+</html>
