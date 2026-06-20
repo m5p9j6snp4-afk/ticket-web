@@ -11,8 +11,9 @@ header a{color:#fff;text-decoration:none}
 .container{max-width:500px;margin:30px auto;padding:0 16px;text-align:center}
 .qr-box{border:1px solid #eee;padding:20px;border-radius:10px;margin:20px 0}
 .tip{color:#f00;margin:10px 0}
-input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:6px}
+.upload-area{border:2px dashed #007aff;padding:30px;border-radius:8px;margin:15px 0}
 .btn{background:#007aff;color:#fff;border:none;padding:12px;width:100%;border-radius:6px;font-size:16px}
+.preview{max-width:100%;max-height:200px;margin:10px 0;display:none}
 </style>
 </head>
 <body>
@@ -24,11 +25,17 @@ input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:
   <div class="qr-box">
     <p>请使用 AlipayHK / 内地支付宝扫码转账</p>
     <p class="tip">转账备注填写上方订单号，方便核对</p>
-    <!-- 后续替换成你的AlipayHK收款二维码图片 -->
-    <p style="margin-top:15px">【https://cdn.phototourl.com/free/2026-06-20-d7e35ddf-8dd2-49cc-acba-124e3c7dac59.jpg】</p>
+    <img src="这里填你的支付宝收款二维码链接" width="220" alt="收款码">
   </div>
-  <p>付款后上传转账截图链接</p>
-  <input type="text" id="imgUrl" placeholder="粘贴截图图片链接">
+
+  <!-- 相册选择图片组件，手机点这里直接打开相册 -->
+  <div class="upload-area">
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+    <p onclick="document.getElementById('fileInput').click()">点击此处，从相册选择转账截图</p>
+  </div>
+  <img id="previewImg" class="preview" alt="截图预览">
+  <p id="tipText"></p>
+
   <button class="btn" onclick="submitPay()">提交付款凭证</button>
 </div>
 <script>
@@ -37,16 +44,43 @@ const urlParams = new URLSearchParams(location.search);
 const orderNo = urlParams.get("orderNo");
 document.getElementById("orderNo").innerText = orderNo;
 
+let finalImgUrl = "";
+const fileInput = document.getElementById("fileInput");
+const previewImg = document.getElementById("previewImg");
+const tipText = document.getElementById("tipText");
+
+// 监听相册选图
+fileInput.onchange = async function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  tipText.innerText = "正在上传图片...";
+  // 临时方案：免费 Telegraph 图床，无需自己搭建存储
+  const formData = new FormData();
+  formData.append("file", file);
+  try{
+    const res = await fetch("https://telegra.ph/upload", {
+      method: "POST",
+      body: formData
+    });
+    const json = await res.json();
+    finalImgUrl = "https://telegra.ph" + json[0].src;
+    previewImg.src = finalImgUrl;
+    previewImg.style.display = "block";
+    tipText.innerText = "图片上传完成，可以提交订单";
+  }catch(err){
+    tipText.innerText = "上传失败，请重新选择图片";
+  }
+}
+
 async function submitPay(){
-  const imgUrl = document.getElementById("imgUrl").value.trim();
-  if(!imgUrl){
-    alert("请粘贴截图链接");
+  if(!finalImgUrl){
+    alert("请先从相册选择转账截图");
     return;
   }
   const res = await fetch(`${API_BASE}/api/upload-pay`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({orderNo,imgUrl})
+    body:JSON.stringify({orderNo,imgUrl:finalImgUrl})
   });
   const data = await res.json();
   if(data.success){
