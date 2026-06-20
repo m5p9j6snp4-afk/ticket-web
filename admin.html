@@ -17,6 +17,7 @@ nav a{color:#fff;text-decoration:none}
 .order-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:16px}
 .btn-ok{background:#16a34a;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px}
 .btn-no{background:#ef4444;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px}
+h3{margin-top:40px;margin-bottom:16px;color:#222}
 </style>
 </head>
 <body>
@@ -29,8 +30,11 @@ nav a{color:#fff;text-decoration:none}
   </div>
 </div>
 <div class="container" id="adminWrap" style="display:none">
-  <h2>全部订单管理列表</h2>
+  <h2>演唱会订单管理列表</h2>
   <div id="orderList"></div>
+
+  <h3>机票订单管理列表</h3>
+  <div id="flightOrderList"></div>
 </div>
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
@@ -45,10 +49,11 @@ async function login(){
   document.getElementById("loginWrap").style.display="none";
   document.getElementById("adminWrap").style.display="block";
   renderOrders(data);
+  loadFlightOrders();
 }
 function renderOrders(list){
   const wrap = document.getElementById("orderList");wrap.innerHTML="";
-  if(list.length===0){wrap.innerHTML="<p>暂无订单</p>";return;}
+  if(list.length===0){wrap.innerHTML="<p>暂无演唱会订单</p>";return;}
   list.forEach(item=>{
     wrap.innerHTML += `
       <div class="order-card">
@@ -79,6 +84,48 @@ async function setReject(orderNo){
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"reject"})
   });
   alert("已驳回订单，刷新页面");location.reload();
+}
+
+// 机票订单相关函数
+async function loadFlightOrders(){
+  const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${adminPwd}`);
+  const list = await res.json();
+  const wrap = document.getElementById("flightOrderList");
+  wrap.innerHTML="";
+  if(list.length===0){wrap.innerHTML="<p>暂无机票订单</p>";return;}
+  list.forEach(item=>{
+    let statusText = item.status=="unpaid"?"未上传凭证":item.status=="checking"?"待核验":item.status=="paid"?"已确认":"已驳回";
+    wrap.innerHTML += `
+      <div class="order-card">
+        <h4>${item.airline} ${item.route}</h4>
+        <p>机票订单号：${item.order_no}</p>
+        <p>起降时间：${item.flight_time}</p>
+        <p>乘机人：${item.passenger_names}</p>
+        <p>联系邮箱：${item.email || "无"}</p>
+        <p>应付金额：HK$${item.price}</p>
+        <p>订单状态：${statusText}</p>
+        ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
+        ${item.status=="checking"?`
+          <button class="btn-ok" onclick="flightPaid('${item.order_no}')">确认收款</button>
+          <button class="btn-no" onclick="flightReject('${item.orderNo}')">驳回订单</button>
+        `:""}
+      </div>
+    `
+  })
+}
+async function flightPaid(no){
+  await fetch(`${API_BASE}/api/admin/flight-set-status`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"paid"})
+  });
+  alert("机票订单确认收款成功，刷新页面");location.reload();
+}
+async function flightReject(no){
+  await fetch(`${API_BASE}/api/admin/flight-set-status`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"reject"})
+  });
+  alert("机票订单已驳回，刷新页面");location.reload();
 }
 </script>
 </body>
