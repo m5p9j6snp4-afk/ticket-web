@@ -1,25 +1,4 @@
 <!DOCTYPE html>
-// 页面加载先校验登录状态
-async function checkLogin(){
-  const token = localStorage.getItem("userToken");
-  if(!token){
-    location.href="/login.html";
-    return false;
-  }
-  const res = await fetch(`${API_BASE}/api/user/info`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({token})
-  });
-  const data = await res.json();
-  if(data.code !== 200){
-    localStorage.clear();
-    location.href="/login.html";
-    return false;
-  }
-  return data.user;
-}
-// 页面初始化执行
-const loginUser = await checkLogin();
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -31,13 +10,13 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 /* 顶部导航栏 极简深色 */
 .header-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#121212}
 .logo-text{color:#fff;font-size:18px;font-weight:500}
-.member-tag{padding:5px 12px;border-radius:30px;background:#2a2a2a;color:#fff;font-size:13px;border:0}
+.member-tag{padding:5px 12px;border-radius:30px;background:#2a2a2a;color:#fff;font-size:13px;border:0;cursor:pointer}
 /* 分类通用模块 */
 .section-wrap{padding:16px 20px}
 .title-sm{font-size:14px;color:#6e6e73;margin-bottom:12px}
 /* 一级四大分类 */
 .cat-row-1{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.cat-item{background:#fff;padding:18px 6px;border-radius:12px;text-align:center}
+.cat-item{background:#fff;padding:18px 6px;border-radius:12px;text-align:center;cursor:pointer}
 .cat-item p{font-size:13px;margin-top:4px}
 /* 二级分类 */
 .cat-row-2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
@@ -59,12 +38,12 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 .event-info{padding:16px}
 .event-name{font-size:15px;font-weight:500;margin-bottom:6px}
 .event-price{color:#ff3b30;font-weight:500;margin:10px 0}
-.btn-buy{width:100%;border:0;background:#121212;color:#fff;padding:11px;border-radius:10px;font-size:14px}
+.btn-buy{width:100%;border:0;background:#121212;color:#fff;padding:11px;border-radius:10px;font-size:14px;cursor:pointer}
 .empty-text{text-align:center;padding:60px 0;color:#86868b}
 /* 底部固定导航 */
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e5e5e7}
-.tab-cell{flex:1;text-align:center;padding:10px 0}
-.tab-cell p{font-size:12px;color:#86868b;margin-top:3px}
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e5e5e7;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#86868b;margin-top:3px;pointer-events:none}
 .tab-cell.active p{color:#121212;font-weight:500}
 </style>
 </head>
@@ -72,13 +51,13 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 <!-- 顶部栏 -->
 <div class="header-top">
   <div class="logo-text">rene0824.com</div>
-  <button class="member-tag" onclick="showMemberRule()">银级会员</button>
+  <button class="member-tag" id="memberBtn">银级会员</button>
 </div>
 
 <!-- 一级分类 -->
 <div class="section-wrap">
   <div class="cat-row-1">
-    <div class="cat-item"><p>住宿</p></div>
+    <div class="cat-item" onclick="location.href='/hotel.html'"><p>住宿</p></div>
     <div class="cat-item" onclick="location.href='/flight.html'"><p>机票</p></div>
     <div class="cat-item"><p>机票+酒店</p></div>
     <div class="cat-item"><p>高铁/火车</p></div>
@@ -146,18 +125,66 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
   <div class="event-grid" id="eventList"></div>
 </div>
 
-<!-- 底部导航 -->
+<!-- 底部导航（全部可点击） -->
 <div class="bottom-tab">
-  <div class="tab-cell active"><p>首页</p></div>
+  <div class="tab-cell active" onclick="location.href='/'"><p>首页</p></div>
   <div class="tab-cell"><p>讯息</p></div>
   <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
   <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell"><p>账户</p></div>
+  <div class="tab-cell" onclick="goAccount()"><p>账户</p></div>
 </div>
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-// 加载演唱会
+let loginUser = null;
+
+// 页面初始化
+window.onload = async function(){
+  const token = localStorage.getItem("userToken");
+  const memberBtn = document.getElementById("memberBtn");
+
+  // 判断登录状态，修改顶部会员按钮
+  if(!token){
+    memberBtn.innerText = "登录/注册";
+    memberBtn.onclick = ()=>location.href="/login.html";
+  }else{
+    try{
+      const res = await fetch(`${API_BASE}/api/user/info`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({token})
+      });
+      const data = await res.json();
+      if(data.code === 200){
+        loginUser = data.user;
+        memberBtn.innerText = loginUser.member_level;
+        memberBtn.onclick = ()=>location.href="/account.html";
+      }else{
+        localStorage.clear();
+        memberBtn.innerText = "登录/注册";
+        memberBtn.onclick = ()=>location.href="/login.html";
+      }
+    }catch(err){
+      localStorage.clear();
+      memberBtn.innerText = "登录/注册";
+      memberBtn.onclick = ()=>location.href="/login.html";
+    }
+  }
+
+  loadEvents();
+}
+
+// 点击账户：未登录跳登录，已登录跳个人中心
+function goAccount(){
+  const token = localStorage.getItem("userToken");
+  if(!token){
+    location.href="/login.html";
+  }else{
+    location.href="/account.html";
+  }
+}
+
+// 加载演唱会列表
 async function loadEvents(){
   const res = await fetch(`${API_BASE}/api/events`);
   const list = await res.json();
@@ -181,17 +208,21 @@ async function loadEvents(){
     `
   })
 }
-function goSeat(id){location.href=`/seat.html?id=${id}`}
-// 展开更多
+
+function goSeat(id){
+  location.href=`/seat.html?id=${id}`
+}
+
+// 展开/收起更多分类面板
 function toggleMore(){
   const panel = document.getElementById("morePanel");
   panel.style.display = panel.style.display==="block" ? "none" : "block";
 }
-// 会员说明
+
+// 会员等级规则弹窗（仅登录用户点击会员等级才触发）
 function showMemberRule(){
   alert("会员体系\n初始：银级\n银→金：累计消费$2000\n每级消费为上一级300%\n等级：银 / 金 / 白金 / 钻石 / 钻石+ / 黑钻");
 }
-loadEvents();
 </script>
 </body>
 </html>
