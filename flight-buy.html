@@ -1,4 +1,25 @@
 <!DOCTYPE html>
+// 页面加载先校验登录状态
+async function checkLogin(){
+  const token = localStorage.getItem("userToken");
+  if(!token){
+    location.href="/login.html";
+    return false;
+  }
+  const res = await fetch(`${API_BASE}/api/user/info`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({token})
+  });
+  const data = await res.json();
+  if(data.code !== 200){
+    localStorage.clear();
+    location.href="/login.html";
+    return false;
+  }
+  return data.user;
+}
+// 页面初始化执行
+const loginUser = await checkLogin();
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
