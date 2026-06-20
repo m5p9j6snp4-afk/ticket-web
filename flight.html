@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机票预订 | 星耀售票</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, sans-serif}
+body{background:#f7f8fa}
+nav{background:#0a0e17;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;position:sticky;top:0;z-index:99}
+.logo{color:#fff;font-size:20px;font-weight:bold}
+.nav-links a{color:#cdd2e0;text-decoration:none;margin-left:20px;font-size:14px}
+.nav-links a:hover{color:#fff}
+.container{max-width:1200px;margin:40px auto;padding:0 16px}
+.page-title{font-size:24px;margin-bottom:28px;color:#111}
+.flight-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:20px;margin-bottom:16px}
+.flight-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.city{font-size:18px;font-weight:bold}
+.airline{color:#666;font-size:14px}
+.time{color:#444;margin:6px 0}
+.price-text{color:#f43f5e;font-weight:bold;font-size:17px}
+.btn-book{padding:10px 20px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:8px;cursor:pointer}
+.empty-tip{text-align:center;padding:80px 0;color:#999;font-size:16px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">星耀售票</div>
+  <div class="nav-links">
+    <a href="/">演唱会首页</a>
+    <a href="/flight.html">机票预订</a>
+    <a href="/mine.html">我的订单</a>
+    <a href="/admin.html">商家后台</a>
+    <a href="/admin-add-event.html">发布演出/航班</a>
+  </div>
+</nav>
+<div class="container">
+  <h2 class="page-title">热门航班</h2>
+  <div id="flightList"></div>
+</div>
+<script>
+const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+// 模拟航班数据，后续可后台新增
+const flightData = [
+  {id:1,airline:"国泰航空",start:"香港",end:"澳门",takeoff:"09:00",land:"10:15",price:480},
+  {id:2,airline:"香港航空",start:"香港",end:"台北",takeoff:"14:20",land:"16:50",price:1280},
+  {id:3,airline:"长荣航空",start:"香港",end:"首尔",takeoff:"08:30",land:"12:00",price:1860}
+];
+function renderFlight(){
+  const wrap = document.getElementById("flightList");
+  if(flightData.length===0){
+    wrap.innerHTML = `<div class="empty-tip">暂无航班</div>`;
+    return;
+  }
+  flightData.forEach(item=>{
+    wrap.innerHTML += `
+      <div class="flight-card">
+        <div class="flight-row">
+          <span class="city">${item.start}</span>
+          <span>✈</span>
+          <span class="city">${item.end}</span>
+        </div>
+        <p class="airline">航空公司：${item.airline}</p>
+        <p class="time">起飞：${item.takeoff} | 落地：${item.land}</p>
+        <div class="flight-row">
+          <span class="price-text">HK$ ${item.price}/人</span>
+          <button class="btn-book" onclick="goFlightBuy(${item.id})">立即预订</button>
+        </div>
+      </div>
+    `
+  })
+}
+function goFlightBuy(id){
+  const f = flightData.find(i=>i.id===id);
+  location.href=`/flight-buy.html?id=${f.id}&start=${f.start}&end=${f.end}&airline=${f.airline}&takeoff=${f.takeoff}&land=${f.land}&price=${f.price}`;
+}
+renderFlight();
+</script>
+</body>
+</html>
