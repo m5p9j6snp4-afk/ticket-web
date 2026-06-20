@@ -77,10 +77,20 @@ fileInput.onchange = async function(e){
 }
 
 async function submitPay(){
-  if(!finalImgUrl){
-    alert("请先上传转账截图");
-    return;
+  // 无图也允许提交
+  const res = await fetch(`${API_BASE}/api/upload-pay`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({orderNo,imgUrl:finalImgUrl || ""})
+  });
+  const data = await res.json();
+  if(data.success){
+    alert("订单提交成功，等待商家核验！");
+    location.href="/mine.html";
+  }else{
+    alert("提交失败，请重试");
   }
+}
   const res = await fetch(`${API_BASE}/api/upload-pay`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
