@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>支付凭证上传 | Re售票</title>
+<title>支付凭证上传 | 星耀售票</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f7f8fa}
@@ -25,46 +25,74 @@ nav a{color:#fff;text-decoration:none}
   <div class="qr-card">
     <p>请使用 AlipayHK / 支付宝转账</p>
     <p class="tip-red">转账备注填写订单号，方便后台核对</p>
-    <img src="https://cdn.phototourl.com/free/2026-06-20-d7e35ddf-8dd2-49cc-acba-124e3c7dac59.jpg" width="240" alt="收款二维码">
+    <img src="这里替换你的收款码图片链接" width="240" alt="收款二维码">
   </div>
+
+  <!-- 相册选图区域，手机点击直接打开相册 -->
   <div class="upload-box" onclick="document.getElementById('fileInput').click()">
     <p>点击此处，从手机相册选择转账截图</p>
   </div>
   <input type="file" id="fileInput" accept="image/*" style="display:none">
   <img class="preview" id="previewImg">
   <p class="tip-text" id="tipText"></p>
+
   <button class="btn-sub" onclick="submitPay()">提交付款凭证</button>
 </div>
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+// ImgBB公共免费密钥，香港访问稳定，替代telegra.ph
+const IMGBB_KEY = "6d207e02198a847aa98d0a2a901485a5";
 const urlParams = new URLSearchParams(location.search);
 const orderNo = urlParams.get("orderNo");
 document.getElementById("orderNo").innerText = orderNo;
+
 let finalImgUrl = "";
 const fileInput = document.getElementById("fileInput");
 const previewImg = document.getElementById("previewImg");
 const tipText = document.getElementById("tipText");
 
+// 相册选图上传逻辑（改用ImgBB，境外线路更稳定）
 fileInput.onchange = async function(e){
-  const file = e.target.files[0];if(!file)return;
+  const file = e.target.files[0];
+  if(!file) return;
   tipText.innerText = "正在上传图片...";
-  const formData = new FormData();formData.append("file", file);
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("key", IMGBB_KEY);
   try{
-    const res = await fetch("https://telegra.ph/upload", {method:"POST", body:formData});
+    // 替换上传接口，抛弃telegra.ph
+    const res = await fetch("https://api.imgbb.com/upload", {
+      method: "POST",
+      body: formData
+    });
     const json = await res.json();
-    finalImgUrl = "https://telegra.ph" + json[0].src;
-    previewImg.src = finalImgUrl;previewImg.style.display = "block";
+    finalImgUrl = json.data.image.url;
+    previewImg.src = finalImgUrl;
+    previewImg.style.display = "block";
     tipText.innerText = "图片上传完成，可提交凭证";
-  }catch(err){tipText.innerText = "上传失败，请切换5G网络重试";}
+  }catch(err){
+    tipText.innerText = "上传失败，请切换5G网络重试";
+    console.error(err);
+  }
 }
+
 async function submitPay(){
-  if(!finalImgUrl){alert("请先上传转账截图");return;}
+  if(!finalImgUrl){
+    alert("请先上传转账截图");
+    return;
+  }
   const res = await fetch(`${API_BASE}/api/upload-pay`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
     body:JSON.stringify({orderNo,imgUrl:finalImgUrl})
   });
   const data = await res.json();
-  if(data.success){alert("凭证提交成功，等待商家核验！");location.href="/mine.html";}
+  if(data.success){
+    alert("凭证提交成功，等待商家核验！");
+    location.href="/mine.html";
+  }else{
+    alert("提交失败，请重试");
+  }
 }
 </script>
 </body>
