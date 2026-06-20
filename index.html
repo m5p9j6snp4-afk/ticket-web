@@ -3,63 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>演唱会票务平台</title>
+<title>Re售票 | 演唱会购票平台</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system}
-header{background:#111;color:#fff;padding:16px;display:flex;gap:24px;align-items:center}
-header a{color:#fff;text-decoration:none;font-size:15px}
-.container{max-width:1100px;margin:30px auto;padding:0 16px}
-h2{margin-bottom:24px}
-.event-card{border:1px solid #eee;border-radius:12px;overflow:hidden;margin-bottom:24px}
-.event-poster{width:100%;height:320px;object-fit:cover;background:#ddd}
-.event-info{padding:16px}
-.event-card h3{margin-bottom:8px;font-size:18px}
-.event-card p{color:#555;margin:4px 0}
-.btn{background:#007aff;color:#fff;border:none;padding:12px 16px;border-radius:8px;margin-top:12px;cursor:pointer;font-size:15px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, sans-serif}
+body{background:#f7f8fa}
+/* 导航栏 */
+nav{background:#0a0e17;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;position:sticky;top:0;z-index:99}
+.logo{color:#fff;font-size:20px;font-weight:bold}
+.nav-links a{color:#cdd2e0;text-decoration:none;margin-left:20px;font-size:14px}
+.nav-links a:hover{color:#fff}
+/* 容器 */
+.container{max-width:1200px;margin:40px auto;padding:0 16px}
+.page-title{font-size:24px;margin-bottom:28px;color:#111}
+/* 演出卡片列表 */
+.event-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+.event-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.event-poster{width:100%;height:360px;object-fit:cover}
+.event-body{padding:18px}
+.event-name{font-size:17px;font-weight:600;margin-bottom:8px;color:#111}
+.event-info{color:#666;font-size:14px;margin:4px 0}
+.price-text{color:#f43f5e;font-weight:bold;margin:12px 0}
+.btn-buy{width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px}
+.btn-buy:active{opacity:0.9}
+.empty-tip{text-align:center;padding:80px 0;color:#999;font-size:16px}
 </style>
 </head>
 <body>
-<header>
-  <a href="/">首页</a>
-  <a href="/list.html">全部演出</a>
-  <a href="/mine.html">我的订单</a>
-  <a href="/admin.html">商家后台</a>
-</header>
+<nav>
+  <div class="logo">星耀售票</div>
+  <div class="nav-links">
+    <a href="/">首页</a>
+    <a href="/mine.html">我的订单</a>
+    <a href="/admin.html">商家后台</a>
+    <a href="/admin-add-event.html">发布演唱会</a>
+  </div>
+</nav>
 <div class="container">
-  <h2>热门演唱会</h2>
-  <div id="eventList"></div>
+  <h2 class="page-title">热门演唱会</h2>
+  <div class="event-wrap" id="eventList"></div>
 </div>
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-
 async function loadEvents(){
   const res = await fetch(`${API_BASE}/api/events`);
   const list = await res.json();
   const wrap = document.getElementById("eventList");
   if(list.length === 0){
-    wrap.innerHTML = "<p>暂无演出，请后台添加</p>";
+    wrap.innerHTML = `<div class="empty-tip">暂无演出，请前往后台发布演唱会</div>`;
     return;
   }
   list.forEach(item=>{
-    // poster为空时使用默认演唱会占位图
-    const posterUrl = item.poster || "https://telegra.ph/file/0442023f809d443489830.jpg";
+    const poster = item.poster || "https://telegra.ph/file/0442023f809d443489830.jpg";
     wrap.innerHTML += `
       <div class="event-card">
-        <img class="event-poster" src="${posterUrl}" alt="${item.name}">
-        <div class="event-info">
-          <h3>${item.name}</h3>
-          <p>演出日期：${item.date}</p>
-          <p>票价起点：HK$${item.price}</p>
-          <button class="btn" onclick="goSeat(${item.id})">立即选座购票</button>
+        <img class="event-poster" src="${poster}" alt="${item.name}">
+        <div class="event-body">
+          <h3 class="event-name">${item.name}</h3>
+          <p class="event-info">演出日期：${item.date}</p>
+          <p class="price-text">HK$ ${item.price} 起</p>
+          <button class="btn-buy" onclick="goSeat(${item.id})">立即选座购票</button>
         </div>
       </div>
     `
   })
 }
-// 跳转选座页面，代替原来的buy下单页
-function goSeat(id){
-  location.href = `/seat.html?id=${id}`;
-}
+function goSeat(id){location.href=`/seat.html?id=${id}`}
 loadEvents();
 </script>
 </body>
