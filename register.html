@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注册账号</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
+body{background:#f8f9fa;padding:40px 20px}
+.box{max-width:420px;margin:0 auto}
+.title{font-size:24px;font-weight:500;margin-bottom:30px;text-align:center}
+.input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid #eee;margin-bottom:16px;font-size:15px}
+.btn{width:100%;padding:14px;background:#111;color:#fff;border:0;border-radius:12px;font-size:16px}
+.login-tip{text-align:center;margin-top:20px;color:#666}
+.login-tip a{color:#2563eb;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1 class="title">注册新账号</h1>
+  <input class="input" id="phone" placeholder="手机号" type="tel">
+  <input class="input" id="pwd" placeholder="设置登录密码" type="password">
+  <input class="input" id="email" placeholder="邮箱（选填）">
+  <button class="btn" onclick="doReg()">完成注册</button>
+  <div class="login-tip">已有账号？<a href="/login.html">去登录</a></div>
+</div>
+<script>
+const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+async function doReg(){
+  const phone = document.getElementById("phone").value.trim();
+  const pwd = document.getElementById("pwd").value.trim();
+  const email = document.getElementById("email").value.trim();
+  if(!phone||!pwd) return alert("手机号和密码必填");
+  const res = await fetch(`${API_BASE}/api/user/register`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({phone,pwd,email})
+  });
+  const d = await res.json();
+  if(d.code!==200) return alert(d.msg);
+  alert("注册成功，请登录");
+  location.href="/login.html";
+}
+</script>
+</body>
+</html>
