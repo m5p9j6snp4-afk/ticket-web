@@ -3,78 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>机票预订 | 星耀售票</title>
+<title>机票预订 | 星耀旅行</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, sans-serif}
-body{background:#f7f8fa}
-nav{background:#0a0e17;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;position:sticky;top:0;z-index:99}
-.logo{color:#fff;font-size:20px;font-weight:bold}
-.nav-links a{color:#cdd2e0;text-decoration:none;margin-left:20px;font-size:14px}
-.nav-links a:hover{color:#fff}
-.container{max-width:1200px;margin:40px auto;padding:0 16px}
-.page-title{font-size:24px;margin-bottom:28px;color:#111}
-.flight-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:20px;margin-bottom:16px}
-.flight-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.city{font-size:18px;font-weight:bold}
-.airline{color:#666;font-size:14px}
-.time{color:#444;margin:6px 0}
-.price-text{color:#f43f5e;font-weight:bold;font-size:17px}
-.btn-book{padding:10px 20px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:8px;cursor:pointer}
-.empty-tip{text-align:center;padding:80px 0;color:#999;font-size:16px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
+body{background:#f8f9fa;padding-bottom:70px}
+.back{padding:16px 20px}
+.back a{text-decoration:none;color:#111}
+.tab-switch{display:flex;margin:0 20px 16px}
+.tab-switch div{flex:1;text-align:center;padding:12px;background:#eee;cursor:pointer}
+.tab-switch div.active{background:#111;color:#fff}
+.form-box{margin:0 20px}
+.form-item{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px}
+.form-item label{font-size:13px;color:#666;display:block;margin-bottom:6px}
+select,input{width:100%;padding:12px;border:1px solid #eee;border-radius:10px;font-size:15px}
+.btn-search{width:100%;margin-top:20px;padding:14px;background:#111;color:#fff;border:0;border-radius:12px;font-size:16px}
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee}
+.tab{flex:1;text-align:center;padding:10px 0}
+.tab p{font-size:12px;color:#777;margin-top:3px}
 </style>
 </head>
 <body>
-<nav>
-  <div class="logo">星耀售票</div>
-  <div class="nav-links">
-    <a href="/">演唱会首页</a>
-    <a href="/flight.html">机票预订</a>
-    <a href="/mine.html">我的订单</a>
-    <a href="/admin.html">商家后台</a>
-    <a href="/admin-add-event.html">发布演出/航班</a>
-  </div>
-</nav>
-<div class="container">
-  <h2 class="page-title">热门航班</h2>
-  <div id="flightList"></div>
+<div class="back"><a href="/">← 返回首页</a></div>
+
+<div class="tab-switch">
+  <div class="active" onclick="setTripType('one')" id="tabOne">单程</div>
+  <div onclick="setTripType('round')" id="tabRound">往返</div>
 </div>
+
+<div class="form-box">
+  <div class="form-item">
+    <label>出发城市</label>
+    <select id="depart">
+      <option>香港 HKG</option>
+      <option>澳门 MFM</option>
+      <option>深圳 SZX</option>
+      <option>上海 PVG</option>
+      <option>东京 NRT</option>
+      <option>首尔 ICN</option>
+    </select>
+  </div>
+  <div class="form-item">
+    <label>目的地</label>
+    <select id="arrive">
+      <option>香港 HKG</option>
+      <option>澳门 MFM</option>
+      <option>深圳 SZX</option>
+      <option>上海 PVG</option>
+      <option>东京 NRT</option>
+      <option>首尔 ICN</option>
+    </select>
+  </div>
+  <div class="form-item">
+    <label>出发日期</label>
+    <input type="date" id="goDate">
+  </div>
+  <div class="form-item" id="returnBox" style="display:none">
+    <label>返程日期</label>
+    <input type="date" id="backDate">
+  </div>
+
+  <button class="btn-search" onclick="searchFlight()">查询航班</button>
+</div>
+
+<div class="bottom-tab">
+  <div class="tab"><p>首页</p></div>
+  <div class="tab"><p>讯息</p></div>
+  <div class="tab"><p>发布</p></div>
+  <div class="tab"><p>我的行程</p></div>
+  <div class="tab"><p>账户</p></div>
+</div>
+
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-// 模拟航班数据，后续可后台新增
-const flightData = [
-  {id:1,airline:"国泰航空",start:"香港",end:"澳门",takeoff:"09:00",land:"10:15",price:480},
-  {id:2,airline:"香港航空",start:"香港",end:"台北",takeoff:"14:20",land:"16:50",price:1280},
-  {id:3,airline:"长荣航空",start:"香港",end:"首尔",takeoff:"08:30",land:"12:00",price:1860}
-];
-function renderFlight(){
-  const wrap = document.getElementById("flightList");
-  if(flightData.length===0){
-    wrap.innerHTML = `<div class="empty-tip">暂无航班</div>`;
+let tripType = "one";
+
+// 登录校验
+async function checkLogin(){
+  const token = localStorage.getItem("userToken");
+  if(!token){
+    location.href="/login.html";
+    return false;
+  }
+  const res = await fetch(`${API_BASE}/api/user/info`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({token})
+  });
+  const d = await res.json();
+  if(d.code!==200){
+    localStorage.clear();
+    location.href="/login.html";
+  }
+}
+checkLogin();
+
+// 切换单程/往返
+function setTripType(type){
+  tripType = type;
+  document.getElementById("tabOne").classList.remove("active");
+  document.getElementById("tabRound").classList.remove("active");
+  if(type === "one"){
+    document.getElementById("tabOne").classList.add("active");
+    document.getElementById("returnBox").style.display = "none";
+  }else{
+    document.getElementById("tabRound").classList.add("active");
+    document.getElementById("returnBox").style.display = "block";
+  }
+}
+
+function searchFlight(){
+  const depart = document.getElementById("depart").value;
+  const arrive = document.getElementById("arrive").value;
+  const go = document.getElementById("goDate").value;
+  if(!depart||!arrive||!go){
+    alert("请填写出发、目的地、出发日期");
     return;
   }
-  flightData.forEach(item=>{
-    wrap.innerHTML += `
-      <div class="flight-card">
-        <div class="flight-row">
-          <span class="city">${item.start}</span>
-          <span>✈</span>
-          <span class="city">${item.end}</span>
-        </div>
-        <p class="airline">航空公司：${item.airline}</p>
-        <p class="time">起飞：${item.takeoff} | 落地：${item.land}</p>
-        <div class="flight-row">
-          <span class="price-text">HK$ ${item.price}/人</span>
-          <button class="btn-book" onclick="goFlightBuy(${item.id})">立即预订</button>
-        </div>
-      </div>
-    `
-  })
+  let msg = `行程类型：${tripType==="one"?"单程":"往返"}\n出发：${depart}\n目的地：${arrive}\n出发日：${go}`;
+  if(tripType==="round") msg += `\n返程日：${document.getElementById("backDate").value}`;
+  alert(msg);
+  // 跳转航班列表/下单页 flight-buy.html
 }
-function goFlightBuy(id){
-  const f = flightData.find(i=>i.id===id);
-  location.href=`/flight-buy.html?id=${f.id}&start=${f.start}&end=${f.end}&airline=${f.airline}&takeoff=${f.takeoff}&land=${f.land}&price=${f.price}`;
-}
-renderFlight();
 </script>
 </body>
 </html>
