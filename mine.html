@@ -3,51 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的订单</title>
+<title>我的订单 | Re售票</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-header{background:#111;color:#fff;padding:16px;display:flex;gap:24px}
-header a{color:#fff;text-decoration:none}
-.container{max-width:700px;margin:30px auto;padding:0 16px}
-.order-card{border:1px solid #eee;border-radius:10px;padding:16px;margin-bottom:16px}
-.status-unpaid{color:#999}
-.status-checking{color:#ff9500}
-.status-paid{color:#00b341}
-.status-reject{color:#f00}
+body{background:#f7f8fa}
+nav{background:#0a0e17;padding:14px 16px}
+nav a{color:#fff;text-decoration:none}
+.container{max-width:700px;margin:30px auto;padding:0 14px}
+.page-title{font-size:22px;margin-bottom:24px}
+.order-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:16px}
+.order-card h4{margin-bottom:8px}
+.status-unpaid{color:#777}
+.status-checking{color:#f97316}
+.status-paid{color:#16a34a}
+.status-reject{color:#ef4444}
+.empty{text-align:center;padding:60px 0;color:#999}
 </style>
 </head>
 <body>
-<header>
-  <a href="/">首页</a>
-</header>
+<nav><a href="/">← 返回首页</a></nav>
 <div class="container">
-  <h2>我的订单</h2>
+  <h2 class="page-title">我的全部订单</h2>
   <div id="orderList"></div>
 </div>
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-// 简易演示：固定取测试订单，正式可加用户登录存储
+const ADMIN_PASSWORD = "这里替换你后台密码";
+
 async function loadAllOrders(){
-  const res = await fetch(`${API_BASE}/api/admin/list?pwd=Rene123456`);
+  const res = await fetch(`${API_BASE}/api/admin/list?pwd=${ADMIN_PASSWORD}`);
   const list = await res.json();
   const wrap = document.getElementById("orderList");
-  if(list.length === 0){
-    wrap.innerHTML = "<p>暂无订单</p>";
-    return;
-  }
+  if(list.length === 0){wrap.innerHTML = `<div class="empty">暂无订单，快去选购演唱会吧</div>`;return;}
   list.forEach(item=>{
-    let statusText = "";
-    let statusClass = "";
-    if(item.status === "unpaid"){statusText="未付款";statusClass="status-unpaid"}
-    if(item.status === "checking"){statusText="待商家核验";statusClass="status-checking"}
-    if(item.status === "paid"){statusText="已确认收款";statusClass="status-paid"}
-    if(item.status === "reject"){statusText="订单驳回";statusClass="status-reject"}
+    let text,cls;
+    if(item.status=="unpaid"){text="未上传凭证";cls="status-unpaid"}
+    else if(item.status=="checking"){text="待商家核验";cls="status-checking"}
+    else if(item.status=="paid"){text="已确认收款";cls="status-paid"}
+    else {text="订单已驳回";cls="status-reject"}
     wrap.innerHTML += `
       <div class="order-card">
+        <h4>${item.event_name}</h4>
         <p>订单号：${item.order_no}</p>
-        <p>演出：${item.event_name}</p>
+        <p>购票人：${item.username} | ${item.contact}</p>
         <p>金额：HK$${item.price}</p>
-        <p>状态：<span class="${statusClass}">${statusText}</span></p>
+        <p>订单状态：<span class="${cls}">${text}</span></p>
       </div>
     `
   })
