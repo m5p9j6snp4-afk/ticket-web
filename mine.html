@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的订单 | Re售票</title>
+<title>我的订单 | 星耀售票</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f7f8fa}
@@ -17,24 +17,61 @@ nav a{color:#fff;text-decoration:none}
 .status-checking{color:#f97316}
 .status-paid{color:#16a34a}
 .status-reject{color:#ef4444}
+.tab-box{display:flex;gap:10px;margin-bottom:24px}
+.tab{flex:1;text-align:center;padding:12px;border-radius:10px;background:#e5e7eb;cursor:pointer}
+.tab.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+h3{margin:30px 0 14px}
 .empty{text-align:center;padding:60px 0;color:#999}
 </style>
 </head>
 <body>
 <nav><a href="/">← 返回首页</a></nav>
 <div class="container">
-  <h2 class="page-title">我的全部订单</h2>
-  <div id="orderList"></div>
+  <h2 class="page-title">个人中心 - 我的全部订单</h2>
+
+  <div class="tab-box">
+    <div class="tab active" onclick="switchTab('concert')">演唱会订单</div>
+    <div class="tab" onclick="switchTab('flight')">机票订单</div>
+  </div>
+
+  <div id="concertBox">
+    <div id="concertList"></div>
+  </div>
+
+  <div id="flightBox" style="display:none">
+    <div id="flightList"></div>
+  </div>
 </div>
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-const ADMIN_PASSWORD = "这里替换你后台密码";
+// 这里填你后台管理员密码，用于读取全部订单
+const ADMIN_PASSWORD = "替换成你的后台密码";
 
-async function loadAllOrders(){
+// 切换标签
+function switchTab(type){
+  const tabs = document.querySelectorAll(".tab");
+  tabs.forEach(t=>t.classList.remove("active"));
+  event.target.classList.add("active");
+
+  if(type === "concert"){
+    document.getElementById("concertBox").style.display="block";
+    document.getElementById("flightBox").style.display="none";
+  }else{
+    document.getElementById("concertBox").style.display="none";
+    document.getElementById("flightBox").style.display="block";
+  }
+}
+
+// 加载演唱会订单
+async function loadConcertOrder(){
   const res = await fetch(`${API_BASE}/api/admin/list?pwd=${ADMIN_PASSWORD}`);
   const list = await res.json();
-  const wrap = document.getElementById("orderList");
-  if(list.length === 0){wrap.innerHTML = `<div class="empty">暂无订单，快去选购演唱会吧</div>`;return;}
+  const wrap = document.getElementById("concertList");
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty">暂无演唱会订单，快去选购</div>`;
+    return;
+  }
+  wrap.innerHTML = "";
   list.forEach(item=>{
     let text,cls;
     if(item.status=="unpaid"){text="未上传凭证";cls="status-unpaid"}
@@ -45,14 +82,51 @@ async function loadAllOrders(){
       <div class="order-card">
         <h4>${item.event_name}</h4>
         <p>订单号：${item.order_no}</p>
-        <p>购票人：${item.username} | ${item.contact}</p>
+        <p>观演人：${item.username}</p>
+        <p>联系电话：${item.contact}</p>
+        <p>邮箱：${item.email || "未填写"}</p>
         <p>金额：HK$${item.price}</p>
         <p>订单状态：<span class="${cls}">${text}</span></p>
+        ${item.pay_img ? `<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
       </div>
     `
   })
 }
-loadAllOrders();
+
+// 加载机票订单
+async function loadFlightOrder(){
+  const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${ADMIN_PASSWORD}`);
+  const list = await res.json();
+  const wrap = document.getElementById("flightList");
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty">暂无机票订单</div>`;
+    return;
+  }
+  wrap.innerHTML = "";
+  list.forEach(item=>{
+    let text,cls;
+    if(item.status=="unpaid"){text="未上传凭证";cls="status-unpaid"}
+    else if(item.status=="checking"){text="待商家核验";cls="status-checking"}
+    else if(item.status=="paid"){text="已确认收款";cls="status-paid"}
+    else {text="订单已驳回";cls="status-reject"}
+    wrap.innerHTML += `
+      <div class="order-card">
+        <h4>${item.airline} ${item.route}</h4>
+        <p>机票订单号：${item.order_no}</p>
+        <p>起降时间：${item.flight_time}</p>
+        <p>乘机人：${item.passenger_names}</p>
+        <p>联系邮箱：${item.email || "无"}</p>
+        <p>应付金额：HK$${item.price}</p>
+        <p>订单状态：<span class="${cls}">${text}</span></p>
+        ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
+      </div>
+    `
+  })
+}
+
+// 页面加载自动执行
+loadConcertOrder();
+loadFlightOrder();
 </script>
 </body>
 </html>
