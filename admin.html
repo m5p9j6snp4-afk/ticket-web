@@ -63,7 +63,7 @@ function renderOrders(list){
         <p>当前状态：${item.status}</p>
         <p>邮箱：${item.email || "未填写"}</p>
         ${item.pay_img ? `<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a></p>`:"<p>未上传凭证</p>"}
-        ${item.status=="checking" ? `
+        ${item.status=="checking" || item.status=="unpaid" ? `
           <button class="btn-ok" onclick="setPaid('${item.orderNo}')">确认收款</button>
           <button class="btn-no" onclick="setReject('${item.orderNo}')">驳回订单</button>
         `:""}
@@ -105,8 +105,8 @@ async function loadFlightOrders(){
         <p>应付金额：HK$${item.price}</p>
         <p>订单状态：${statusText}</p>
         ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
-        ${item.status=="checking"?`
-          <button class="btn-ok" onclick="flightPaid('${item.order_no}')">确认收款</button>
+        ${item.status=="checking" || item.status=="unpaid"?`
+          <button class="btn-ok" onclick="flightPaid('${item.orderNo}')">确认收款</button>
           <button class="btn-no" onclick="flightReject('${item.orderNo}')">驳回订单</button>
         `:""}
       </div>
