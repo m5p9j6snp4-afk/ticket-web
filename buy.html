@@ -42,39 +42,48 @@ const eventId = urlParams.get("id");
 let eventData = {};
 
 async function loadEvent(){
-  const allRes = await fetch(`${API_BASE}/api/events`);
-  const allEvents = await allRes.json();
-  eventData = allEvents.find(item=>item.id == eventId);
-  if(!eventData) {
-    alert("演出不存在");
-    return location.href="/";
+  try{
+    const allRes = await fetch(`${API_BASE}/api/events`);
+    const allEvents = await allRes.json();
+    eventData = allEvents.find(item=>item.id == eventId);
+    if(!eventData) {
+      alert("演出不存在，返回首页");
+      return location.href="/";
+    }
+    document.getElementById("eventName").innerText = eventData.name;
+    document.getElementById("eventPrice").innerText = eventData.price;
+  }catch(e){
+    alert("加载演出失败："+e.message);
   }
-  document.getElementById("eventName").innerText = eventData.name;
-  document.getElementById("eventPrice").innerText = eventData.price;
 }
 
 async function submitOrder(){
   const username = document.getElementById("username").value.trim();
   const contact = document.getElementById("contact").value.trim();
   if(!username || !contact){
-    alert("请填写姓名和电话");
+    alert("请完整填写姓名和联系电话");
     return;
   }
-  const res = await fetch(`${API_BASE}/api/create-order`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      eventName:eventData.name,
-      price:eventData.price,
-      username,
-      contact
-    })
-  });
-  const data = await res.json();
-  if(data.success){
-    location.href = `/pay.html?orderNo=${data.orderNo}`;
-  }else{
-    alert("创建订单失败");
+  try{
+    const res = await fetch(`${API_BASE}/api/create-order`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        eventName:eventData.name,
+        price:eventData.price,
+        username,
+        contact
+      })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert("订单创建成功！");
+      location.href = `/pay.html?orderNo=${data.orderNo}`;
+    }else{
+      alert("创建失败："+(data.msg || "接口异常"));
+    }
+  }catch(error){
+    alert("提交请求失败："+error.message+"\n大概率是跨域问题，请更新Worker代码");
   }
 }
 loadEvent();
