@@ -3,208 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>星耀旅行 | 演唱会·机票预订平台</title>
+<title>星耀旅行 | 演唱会&机票预订</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, sans-serif}
-body{background:#f7f8fa;padding-bottom:72px}
-/* 顶部域名+会员栏 */
-.top-header{background:#0a0e17;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
-.site-domain{color:#fff;font-size:19px;font-weight:bold}
-.member-btn{padding:6px 14px;border-radius:22px;background:#6366f1;color:#fff;border:none;font-size:14px}
-/* 一级分类栏 */
-.cat1-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 16px}
-.cat1-item{background:#fff;border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);cursor:pointer}
-.cat1-item p{margin-top:6px;font-size:14px;color:#222}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,system-ui,sans-serif}
+body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
+/* 顶部导航栏 极简深色 */
+.header-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#121212}
+.logo-text{color:#fff;font-size:18px;font-weight:500}
+.member-tag{padding:5px 12px;border-radius:30px;background:#2a2a2a;color:#fff;font-size:13px;border:0}
+/* 分类通用模块 */
+.section-wrap{padding:16px 20px}
+.title-sm{font-size:14px;color:#6e6e73;margin-bottom:12px}
+/* 一级四大分类 */
+.cat-row-1{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat-item{background:#fff;padding:18px 6px;border-radius:12px;text-align:center}
+.cat-item p{font-size:13px;margin-top:4px}
 /* 二级分类 */
-.cat2-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 16px 18px}
-.cat2-item{background:#fff;border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);cursor:pointer}
-.cat2-item p{margin-top:6px;font-size:14px;color:#222}
-/* 更多下拉面板 */
-.more-panel{margin:0 16px 18px;background:#fff;border-radius:14px;padding:16px;display:none;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
-.more-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.more-cell{text-align:center;padding:10px;font-size:14px;color:#444}
-/* 搜索框 */
-.search-box{margin:0 16px 24px}
-.search-input{width:100%;padding:14px 18px;border-radius:12px;border:1px solid #e2e8f0;font-size:15px;background:#fff}
-/* 板块通用标题 */
-.section-title{padding:0 16px;margin:24px 0 12px;font-size:18px;font-weight:600;color:#111}
-/* 横向滑动卡片容器 */
-.slide-wrap{display:flex;gap:14px;padding:0 16px;overflow-x:auto;padding-bottom:8px}
-.slide-wrap::-webkit-scrollbar{height:4px}
-.slide-card{min-width:260px;background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04);padding:16px}
-/* 演唱会演出卡片 */
-.event-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;padding:0 16px}
-.event-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
-.event-poster{width:100%;height:360px;object-fit:cover}
-.event-body{padding:18px}
-.event-name{font-size:17px;font-weight:600;margin-bottom:8px;color:#111}
-.event-info{color:#666;font-size:14px;margin:4px 0}
-.price-text{color:#f43f5e;font-weight:bold;margin:12px 0}
-.btn-buy{width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px}
-.btn-buy:active{opacity:0.9}
-.empty-tip{text-align:center;padding:80px 0;color:#999;font-size:16px}
-/* 底部导航 */
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e5e7eb;z-index:99}
-.nav-cell{flex:1;text-align:center;padding:12px 0}
-.nav-cell p{font-size:12px;margin-top:4px;color:#666}
-.nav-cell.active p{color:#6366f1;font-weight:500}
+.cat-row-2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+/* 更多弹窗 */
+.more-container{margin:0 20px 16px;background:#fff;border-radius:12px;padding:16px;display:none}
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.more-item{text-align:center;font-size:13px;padding:6px}
+/* 搜索框极简 */
+.search-bar{margin:0 20px 24px}
+.search-input{width:100%;padding:14px 16px;border-radius:10px;border:0;background:#fff;font-size:14px}
+/* 横向卡片滑块 */
+.slider-box{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
+.slider-box::-webkit-scrollbar{display:none}
+.slide-card{min-width:220px;background:#fff;border-radius:12px;padding:16px;font-size:14px}
+/* 演唱会卡片 */
+.event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.event-card{background:#fff;border-radius:14px;overflow:hidden}
+.event-img{width:100%;height:320px;object-fit:cover}
+.event-info{padding:16px}
+.event-name{font-size:15px;font-weight:500;margin-bottom:6px}
+.event-price{color:#ff3b30;font-weight:500;margin:10px 0}
+.btn-buy{width:100%;border:0;background:#121212;color:#fff;padding:11px;border-radius:10px;font-size:14px}
+.empty-text{text-align:center;padding:60px 0;color:#86868b}
+/* 底部固定导航 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e5e5e7}
+.tab-cell{flex:1;text-align:center;padding:10px 0}
+.tab-cell p{font-size:12px;color:#86868b;margin-top:3px}
+.tab-cell.active p{color:#121212;font-weight:500}
 </style>
 </head>
 <body>
-<!-- 顶部：域名 + 会员等级 -->
-<div class="top-header">
-  <div class="site-domain">rene0824.com</div>
-  <button class="member-btn" onclick="openMemberRule()">银级会员</button>
+<!-- 顶部栏 -->
+<div class="header-top">
+  <div class="logo-text">rene0824.com</div>
+  <button class="member-tag" onclick="showMemberRule()">银级会员</button>
 </div>
 
-<!-- 一级分类：住宿、机票、机票+酒店、高铁/火车 -->
-<div class="cat1-wrap">
-  <div class="cat1-item">
-    <p>住宿</p>
+<!-- 一级分类 -->
+<div class="section-wrap">
+  <div class="cat-row-1">
+    <div class="cat-item"><p>住宿</p></div>
+    <div class="cat-item" onclick="location.href='/flight.html'"><p>机票</p></div>
+    <div class="cat-item"><p>机票+酒店</p></div>
+    <div class="cat-item"><p>高铁/火车</p></div>
   </div>
-  <div class="cat1-item" onclick="location.href='/flight.html'">
-    <p>机票</p>
-  </div>
-  <div class="cat1-item">
-    <p>机票+酒店</p>
-  </div>
-  <div class="cat1-item">
-    <p>高铁/火车</p>
-  </div>
-</div>
-
-<!-- 二级分类：民宿、门票、租车接送、更多 -->
-<div class="cat2-wrap">
-  <div class="cat2-item">
-    <p>民宿</p>
-  </div>
-  <div class="cat2-item">
-    <p>演唱会门票</p>
-  </div>
-  <div class="cat2-item">
-    <p>租车/机场接送</p>
-  </div>
-  <div class="cat2-item" onclick="toggleMoreBox()">
-    <p>更多</p>
+  <div class="cat-row-2">
+    <div class="cat-item"><p>民宿</p></div>
+    <div class="cat-item"><p>演唱会门票</p></div>
+    <div class="cat-item"><p>租车接送</p></div>
+    <div class="cat-item" onclick="toggleMore()"><p>更多</p></div>
   </div>
 </div>
 
-<!-- 更多下拉面板 -->
-<div class="more-panel" id="moreBox">
-  <div class="more-row">
-    <div class="more-cell">邮轮</div>
-    <div class="more-cell">礼品卡</div>
-    <div class="more-cell">旅游保险</div>
-    <div class="more-cell">船票</div>
-    <div class="more-cell">eSIM</div>
-    <div class="more-cell">合作伙伴</div>
-    <div class="more-cell">关于星耀旅行</div>
+<!-- 更多隐藏面板 -->
+<div class="more-container" id="morePanel">
+  <div class="more-grid">
+    <div class="more-item">邮轮</div>
+    <div class="more-item">礼品卡</div>
+    <div class="more-item">旅游保险</div>
+    <div class="more-item">船票</div>
+    <div class="more-item">eSIM</div>
+    <div class="more-item">合作伙伴</div>
+    <div class="more-item">关于星耀旅行</div>
   </div>
 </div>
 
-<!-- 搜索框 -->
-<div class="search-box">
-  <input class="search-input" placeholder="搜索演唱会、航班、目的地、酒店">
+<!-- 搜索 -->
+<div class="search-bar">
+  <input class="search-input" placeholder="搜索目的地、航班、演唱会">
 </div>
 
-<!-- 优惠活动板块 -->
-<h3 class="section-title">优惠 & 限时活动</h3>
-<div class="slide-wrap">
-  <div class="slide-card">演唱会限时折扣</div>
-  <div class="slide-card">机票满减优惠</div>
-  <div class="slide-card">旅行套餐特价</div>
+<!-- 优惠活动 -->
+<div class="section-wrap">
+  <div class="title-sm">限时优惠</div>
+  <div class="slider-box">
+    <div class="slide-card">演唱会折扣</div>
+    <div class="slide-card">机票满减</div>
+    <div class="slide-card">旅行套餐</div>
+  </div>
 </div>
 
-<!-- 旅游攻略板块 -->
-<h3 class="section-title">旅游攻略</h3>
-<div class="slide-wrap">
-  <div class="slide-card">香港短途出行</div>
-  <div class="slide-card">澳门两日游</div>
-  <div class="slide-card">日韩自由行指南</div>
+<!-- 旅游攻略 -->
+<div class="section-wrap">
+  <div class="title-sm">旅游攻略</div>
+  <div class="slider-box">
+    <div class="slide-card">香港短途游</div>
+    <div class="slide-card">澳门两日行程</div>
+    <div class="slide-card">日韩自由行</div>
+  </div>
 </div>
 
-<!-- 热门目的地推广 -->
-<h3 class="section-title">热门目的地推荐</h3>
-<div class="slide-wrap">
-  <div class="slide-card">泰国</div>
-  <div class="slide-card">日本</div>
-  <div class="slide-card">韩国</div>
-  <div class="slide-card">内地城市</div>
+<!-- 热门目的地 -->
+<div class="section-wrap">
+  <div class="title-sm">热门目的地</div>
+  <div class="slider-box">
+    <div class="slide-card">泰国</div>
+    <div class="slide-card">日本</div>
+    <div class="slide-card">韩国</div>
+    <div class="slide-card">内地城市</div>
+  </div>
 </div>
 
-<!-- 热门演唱会列表（原有功能完整保留） -->
-<h3 class="section-title">热门演唱会</h3>
-<div class="event-wrap" id="eventList"></div>
+<!-- 热门演唱会 -->
+<div class="section-wrap">
+  <div class="title-sm">热门演唱会</div>
+  <div class="event-grid" id="eventList"></div>
+</div>
 
-<!-- 底部固定导航栏 -->
-<div class="bottom-nav">
-  <div class="nav-cell active">
-    <p>首页</p>
-  </div>
-  <div class="nav-cell">
-    <p>讯息</p>
-  </div>
-  <div class="nav-cell" onclick="location.href='/admin-add-event.html'">
-    <p>发布</p>
-  </div>
-  <div class="nav-cell" onclick="location.href='/mine.html'">
-    <p>我的行程</p>
-  </div>
-  <div class="nav-cell">
-    <p>账户</p>
-  </div>
+<!-- 底部导航 -->
+<div class="bottom-tab">
+  <div class="tab-cell active"><p>首页</p></div>
+  <div class="tab-cell"><p>讯息</p></div>
+  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
+  <div class="tab-cell"><p>账户</p></div>
 </div>
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-
-// 加载演唱会列表（原版逻辑不变）
+// 加载演唱会
 async function loadEvents(){
   const res = await fetch(`${API_BASE}/api/events`);
   const list = await res.json();
   const wrap = document.getElementById("eventList");
-  if(list.length === 0){
-    wrap.innerHTML = `<div class="empty-tip">暂无演出，请前往发布页面新增演唱会</div>`;
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-text">暂无演出</div>`;
     return;
   }
   list.forEach(item=>{
-    const poster = item.poster || "https://telegra.ph/file/0442023f809d443489830.jpg";
+    const img = item.poster || "https://telegra.ph/file/0442023f809d443489830.jpg";
     wrap.innerHTML += `
       <div class="event-card">
-        <img class="event-poster" src="${poster}" alt="${item.name}">
-        <div class="event-body">
-          <h3 class="event-name">${item.name}</h3>
-          <p class="event-info">演出日期：${item.date}</p>
-          <p class="price-text">HK$ ${item.price} 起</p>
-          <button class="btn-buy" onclick="goSeat(${item.id})">立即选座购票</button>
+        <img class="event-img" src="${img}">
+        <div class="event-info">
+          <div class="event-name">${item.name}</div>
+          <p>${item.date}</p>
+          <div class="event-price">HK$${item.price}起</div>
+          <button class="btn-buy" onclick="goSeat(${item.id})">立即购票</button>
         </div>
       </div>
     `
   })
 }
-function goSeat(id){
-  location.href=`/seat.html?id=${id}`;
+function goSeat(id){location.href=`/seat.html?id=${id}`}
+// 展开更多
+function toggleMore(){
+  const panel = document.getElementById("morePanel");
+  panel.style.display = panel.style.display==="block" ? "none" : "block";
 }
-
-// 展开/收起更多分类面板
-function toggleMoreBox(){
-  const box = document.getElementById("moreBox");
-  box.style.display = box.style.display === "block" ? "none" : "block";
+// 会员说明
+function showMemberRule(){
+  alert("会员体系\n初始：银级\n银→金：累计消费$2000\n每级消费为上一级300%\n等级：银 / 金 / 白金 / 钻石 / 钻石+ / 黑钻");
 }
-
-// 会员等级说明弹窗
-function openMemberRule(){
-  alert(`会员等级规则
-初始等级：银级
-升级阶梯（消费金额为上一档300%）
-1. 银级 → 金级：累计消费$2000
-2. 金级 → 白金级
-3. 白金级 → 钻石级
-4. 钻石级 → 钻石+级
-5. 钻石+级 → 黑钻级`);
-}
-
-// 页面加载执行
 loadEvents();
 </script>
 </body>
