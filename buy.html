@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>填写购票信息 | 星耀售票</title>
+<title>填写购票信息 | Re售票</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f7f8fa}
@@ -16,6 +16,8 @@ nav a{color:#fff;text-decoration:none}
 .form-item{margin:20px 0}
 label{display:block;margin-bottom:8px;font-weight:500;color:#222}
 input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:15px}
+.ticket-block{background:#f4f5fa;padding:14px;border-radius:10px;margin:12px 0}
+.ticket-title{font-weight:600;margin-bottom:8px}
 .btn-sub{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;margin-top:10px}
 </style>
 </head>
@@ -25,16 +27,22 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   <div class="info-card">
     <h3 id="eventName"></h3>
     <p class="seat-desc">已选座位：<span id="seatText"></span></p>
+    <p>购票票数：<span id="seatCount"></span> 张</p>
     <p>应付总价：HK$<span id="totalPrice"></span></p>
   </div>
+
+  <div id="ticketUserBox"></div>
+
   <div class="form-item">
-    <label>观演人真实姓名</label>
-    <input type="text" id="username" placeholder="请填写入场实名">
+    <label>联系邮箱（接收订单通知）</label>
+    <input type="email" id="userEmail" placeholder="example@gmail.com">
   </div>
+
   <div class="form-item">
     <label>联系电话</label>
     <input type="text" id="contact" placeholder="香港/内地手机号">
   </div>
+
   <button class="btn-sub" onclick="submitOrder()">提交订单</button>
 </div>
 <script>
@@ -43,28 +51,74 @@ const urlParams = new URLSearchParams(location.search);
 const eventId = urlParams.get("id");
 const selectSeats = urlParams.get("seats");
 const total = urlParams.get("total");
+const seatCount = Number(urlParams.get("count"));
 let eventData = {};
 
 async function loadEvent(){
   const allRes = await fetch(`${API_BASE}/api/events`);
   const allEvents = await allRes.json();
   eventData = allEvents.find(item=>item.id == eventId);
-  if(!eventData){alert("演出不存在");location.href="/";return;}
+  if(!eventData){
+    alert("演出不存在");
+    location.href="/";
+    return;
+  }
   document.getElementById("eventName").innerText = eventData.name;
   document.getElementById("seatText").innerText = selectSeats;
+  document.getElementById("seatCount").innerText = seatCount;
   document.getElementById("totalPrice").innerText = total;
+
+  // 根据票数动态生成对应观演人输入框
+  const userBox = document.getElementById("ticketUserBox");
+  let html = "";
+  for(let i=1; i<=seatCount; i++){
+    html += `
+      <div class="ticket-block">
+        <div class="ticket-title">第${i}位观演人实名</div>
+        <input type="text" class="userNameInput" placeholder="请填写真实入场姓名">
+      </div>
+    `
+  }
+  userBox.innerHTML = html;
 }
+
 async function submitOrder(){
-  const username = document.getElementById("username").value.trim();
+  // 收集所有观演人姓名
+  const nameInputs = document.querySelectorAll(".userNameInput");
+  const nameList = [];
+  for(let input of nameInputs){
+    const val = input.value.trim();
+    if(!val){
+      alert("请完整填写全部观演人姓名");
+      return;
+    }
+    nameList.push(val);
+  }
+
+  const email = document.getElementById("userEmail").value.trim();
   const contact = document.getElementById("contact").value.trim();
-  if(!username || !contact){alert("请完整填写姓名与联系电话");return;}
+  if(!email || !contact){
+    alert("请填写邮箱与联系电话");
+    return;
+  }
+
   const res = await fetch(`${API_BASE}/api/create-order`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({eventName:eventData.name,price:total,username,contact})
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      eventName:eventData.name,
+      price:total,
+      username:nameList.join("、"), // 多名观演人用顿号拼接存入数据库
+      contact,
+      email
+    })
   });
   const data = await res.json();
-  if(data.success){location.href=`/pay.html?orderNo=${data.orderNo}`;}
-  else alert("订单创建失败，请重试");
+  if(data.success){
+    location.href = `/pay.html?orderNo=${data.orderNo}`;
+  }else{
+    alert("订单创建失败，请重试");
+  }
 }
 loadEvent();
 </script>
