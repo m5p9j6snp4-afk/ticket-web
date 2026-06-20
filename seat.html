@@ -108,9 +108,13 @@ function updateTotal(){
   document.getElementById("totalPrice").innerText = total;
 }
 function confirmSeat(){
-  if(selectedList.length===0){alert("请至少选择一个座位");return;}
+  if(selectedList.length === 0){
+    alert("请至少选择一个座位");
+    return;
+  }
   const seatStr = selectedList.map(s=>s.id).join(",");
-  location.href=`/buy.html?id=${eventId}&seats=${seatStr}&total=${document.getElementById("totalPrice").innerText}`;
+  const seatCount = selectedList.length;
+  location.href=`/buy.html?id=${eventId}&seats=${seatStr}&total=${document.getElementById("totalPrice").innerText}&count=${seatCount}`;
 }
 loadEvent();
 </script>
