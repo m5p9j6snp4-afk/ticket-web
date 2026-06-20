@@ -3,32 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>后台新增演唱会</title>
+<title>发布演唱会 | 商家后台</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-.container{max-width:600px;margin:30px auto;padding:0 16px}
-h2{text-align:center;margin-bottom:24px}
-.form-item{margin:16px 0}
-label{display:block;margin-bottom:6px;font-weight:500}
-input{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px}
-.upload-box{border:2px dashed #007aff;padding:30px;text-align:center;border-radius:8px;margin:10px 0}
-.preview{max-width:100%;max-height:220px;display:none;margin:10px 0}
-.btn{width:100%;background:#007aff;color:#fff;border:none;padding:12px;border-radius:8px;font-size:16px}
-.tip{color:#666;font-size:13px}
+body{background:#f7f8fa}
+nav{background:#0a0e17;padding:14px 16px}
+nav a{color:#fff;text-decoration:none}
+.container{max-width:620px;margin:30px auto;padding:0 14px}
+.page-title{text-align:center;font-size:22px;margin-bottom:28px}
+.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:40px 16px;text-align:center;color:#6366f1;margin-bottom:20px}
+.preview{max-width:100%;max-height:240px;border-radius:10px;display:none;margin:10px 0}
+.form-item{margin:20px 0}
+label{display:block;margin-bottom:8px;font-weight:500}
+input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:15px}
+.btn-save{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px}
+.tip{font-size:14px;color:#666}
 </style>
 </head>
 <body>
+<nav><a href="/">← 返回首页</a></nav>
 <div class="container">
-  <h2>新增演唱会场次</h2>
-  <div class="form-item">
-    <label>演唱会海报</label>
-    <div class="upload-box" onclick="document.getElementById('imgFile').click()">
-      <p>点击上传海报图片（相册选择）</p>
-    </div>
-    <input type="file" id="imgFile" accept="image/*" style="display:none">
-    <img class="preview" id="imgPreview">
-    <p class="tip" id="uploadTip"></p>
+  <h2 class="page-title">发布新演唱会</h2>
+  <div class="upload-box" onclick="document.getElementById('imgFile').click()">
+    <p>点击上传演唱会海报（相册选择）</p>
   </div>
+  <input type="file" id="imgFile" accept="image/*" style="display:none">
+  <img class="preview" id="imgPreview">
+  <p class="tip" id="uploadTip"></p>
 
   <div class="form-item">
     <label>演出名称</label>
@@ -39,13 +40,11 @@ input{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px}
     <input type="date" id="eventDate">
   </div>
   <div class="form-item">
-    <label>基础票价(HK$)</label>
+    <label>基础票价 HK$</label>
     <input type="number" id="eventPrice" placeholder="780">
   </div>
-
-  <button class="btn" onclick="submitAdd()">保存演唱会</button>
+  <button class="btn-save" onclick="submitAdd()">保存发布</button>
 </div>
-
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 let posterUrl = "";
@@ -53,48 +52,32 @@ const fileInput = document.getElementById("imgFile");
 const preview = document.getElementById("imgPreview");
 const tip = document.getElementById("uploadTip");
 
-// 相册选图自动上传
 fileInput.onchange = async function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  tip.innerText = "上传中...";
-  const formData = new FormData();
-  formData.append("file", file);
+  const file = e.target.files[0];if(!file)return;
+  tip.innerText = "图片上传中...";
+  const formData = new FormData();formData.append("file", file);
   try{
     const res = await fetch("https://telegra.ph/upload", {method:"POST", body:formData});
     const json = await res.json();
     posterUrl = "https://telegra.ph" + json[0].src;
-    preview.src = posterUrl;
-    preview.style.display = "block";
+    preview.src = posterUrl;preview.style.display = "block";
     tip.innerText = "海报上传完成";
-  }catch(err){
-    tip.innerText = "图片上传失败，请重试";
-  }
+  }catch(err){tip.innerText = "上传失败，切换5G网络重试";}
 }
-
-// 提交新增演唱会到D1数据库
 async function submitAdd(){
-  const pwd = prompt("请输入后台管理员密码");
-  if(!pwd) return;
+  const pwd = prompt("请输入管理员后台密码");
+  if(!pwd)return;
   const name = document.getElementById("eventName").value.trim();
   const date = document.getElementById("eventDate").value;
   const price = Number(document.getElementById("eventPrice").value);
-  if(!name || !date || !price){
-    alert("请完整填写演出信息");
-    return;
-  }
+  if(!name||!date||!price){alert("请完整填写全部演出信息");return;}
   const res = await fetch(`${API_BASE}/api/admin/add-event?pwd=${pwd}`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
+    method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({name,date,price,poster:posterUrl})
   });
   const data = await res.json();
-  if(data.success){
-    alert("演唱会添加成功，首页刷新即可展示");
-    location.reload();
-  }else{
-    alert(data.msg || "添加失败，密码错误");
-  }
+  if(data.success){alert("演唱会发布成功！刷新首页查看");location.reload();}
+  else alert(data.msg || "发布失败，密码错误");
 }
 </script>
 </body>
