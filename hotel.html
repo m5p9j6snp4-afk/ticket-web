@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>住宿预订 | 星耀旅行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
+body{background:#f8f9fa;padding-bottom:70px}
+.back{padding:16px 20px}
+.back a{text-decoration:none;color:#111}
+.form-box{margin:0 20px}
+.form-item{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px}
+.form-item label{font-size:13px;color:#666;display:block;margin-bottom:6px}
+select,input{width:100%;padding:12px;border:1px solid #eee;border-radius:10px;font-size:15px}
+.row-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-search{width:100%;margin-top:20px;padding:14px;background:#111;color:#fff;border:0;border-radius:12px;font-size:16px}
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee}
+.tab{flex:1;text-align:center;padding:10px 0}
+.tab p{font-size:12px;color:#777;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="back"><a href="/">← 返回首页</a></div>
+<div class="form-box">
+  <div class="form-item">
+    <label>目的地 / 国家地区</label>
+    <select id="city">
+      <option value="">请选择</option>
+      <option>中国香港</option>
+      <option>中国澳门</option>
+      <option>中国内地</option>
+      <option>日本</option>
+      <option>韩国</option>
+      <option>泰国</option>
+      <option>马来西亚</option>
+      <option>新加坡</option>
+    </select>
+  </div>
+
+  <div class="row-two">
+    <div class="form-item">
+      <label>入住日期</label>
+      <input type="date" id="checkIn">
+    </div>
+    <div class="form-item">
+      <label>离店日期</label>
+      <input type="date" id="checkOut">
+    </div>
+  </div>
+
+  <div class="row-two">
+    <div class="form-item">
+      <label>房间数量</label>
+      <select id="room">
+        <option>1间</option>
+        <option>2间</option>
+        <option>3间</option>
+        <option>4间</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label>入住人数</label>
+      <select id="people">
+        <option>1人</option>
+        <option>2人</option>
+        <option>3人</option>
+        <option>4人</option>
+        <option>5人</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn-search" onclick="searchHotel()">查询酒店</button>
+</div>
+
+<div class="bottom-tab">
+  <div class="tab"><p>首页</p></div>
+  <div class="tab"><p>讯息</p></div>
+  <div class="tab"><p>发布</p></div>
+  <div class="tab"><p>我的行程</p></div>
+  <div class="tab"><p>账户</p></div>
+</div>
+
+<script>
+const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+// 登录校验
+async function checkLogin(){
+  const token = localStorage.getItem("userToken");
+  if(!token){
+    location.href="/login.html";
+    return false;
+  }
+  const res = await fetch(`${API_BASE}/api/user/info`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({token})
+  });
+  const d = await res.json();
+  if(d.code!==200){
+    localStorage.clear();
+    location.href="/login.html";
+  }
+}
+checkLogin();
+
+function searchHotel(){
+  const city = document.getElementById("city").value;
+  const inDate = document.getElementById("checkIn").value;
+  const outDate = document.getElementById("checkOut").value;
+  const room = document.getElementById("room").value;
+  const people = document.getElementById("people").value;
+  if(!city||!inDate||!outDate){
+    alert("请完善全部查询条件");
+    return;
+  }
+  alert(`查询条件：\n地区：${city}\n入住：${inDate} 离店：${outDate}\n${room} ${people}`);
+  // 后续可跳转酒店列表页
+}
+</script>
+</body>
+</html>
