@@ -41,20 +41,18 @@ const urlParams = new URLSearchParams(location.search);
 const eventId = urlParams.get("id");
 let eventData = {};
 
-// 模拟演出数据（后续可后台添加，现在先固定测试）
-const mockEvents = [
-  {id:1,name:"XX歌手香港演唱会",date:"2026-08-10",price:680},
-  {id:2,name:"音乐节2026",date:"2026-07-25",price:420}
-];
-
-// 加载演出信息
-function loadEvent(){
-  eventData = mockEvents.find(item=>item.id == eventId);
+async function loadEvent(){
+  const allRes = await fetch(`${API_BASE}/api/events`);
+  const allEvents = await allRes.json();
+  eventData = allEvents.find(item=>item.id == eventId);
+  if(!eventData) {
+    alert("演出不存在");
+    return location.href="/";
+  }
   document.getElementById("eventName").innerText = eventData.name;
   document.getElementById("eventPrice").innerText = eventData.price;
 }
 
-// 创建订单
 async function submitOrder(){
   const username = document.getElementById("username").value.trim();
   const contact = document.getElementById("contact").value.trim();
@@ -74,7 +72,6 @@ async function submitOrder(){
   });
   const data = await res.json();
   if(data.success){
-    // 跳转到付款页面，携带订单号
     location.href = `/pay.html?orderNo=${data.orderNo}`;
   }else{
     alert("创建订单失败");
