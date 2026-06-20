@@ -97,6 +97,14 @@ async function submitFlightPay(){
     location.href="/mine.html";
   }
 }
+// 支付提交成功后执行
+await fetch(`${API_BASE}/api/user/addspend`,{
+  method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    phone:loginUser.phone,
+    money:总价数字
+  })
+});
 </script>
 </body>
 </html>
