@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>付款</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+header{background:#111;color:#fff;padding:16px}
+header a{color:#fff;text-decoration:none}
+.container{max-width:500px;margin:30px auto;padding:0 16px;text-align:center}
+.qr-box{border:1px solid #eee;padding:20px;border-radius:10px;margin:20px 0}
+.tip{color:#f00;margin:10px 0}
+input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:6px}
+.btn{background:#007aff;color:#fff;border:none;padding:12px;width:100%;border-radius:6px;font-size:16px}
+</style>
+</head>
+<body>
+<header>
+  <a href="/">返回首页</a>
+</header>
+<div class="container">
+  <h3>订单号：<span id="orderNo"></span></h3>
+  <div class="qr-box">
+    <p>请使用 AlipayHK / 内地支付宝扫码转账</p>
+    <p class="tip">转账备注填写上方订单号，方便核对</p>
+    <!-- 后续替换成你的AlipayHK收款二维码图片 -->
+    <p style="margin-top:15px">【此处替换你的收款二维码图片】</p>
+  </div>
+  <p>付款后上传转账截图链接</p>
+  <input type="text" id="imgUrl" placeholder="粘贴截图图片链接">
+  <button class="btn" onclick="submitPay()">提交付款凭证</button>
+</div>
+<script>
+const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+const urlParams = new URLSearchParams(location.search);
+const orderNo = urlParams.get("orderNo");
+document.getElementById("orderNo").innerText = orderNo;
+
+async function submitPay(){
+  const imgUrl = document.getElementById("imgUrl").value.trim();
+  if(!imgUrl){
+    alert("请粘贴截图链接");
+    return;
+  }
+  const res = await fetch(`${API_BASE}/api/upload-pay`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({orderNo,imgUrl})
+  });
+  const data = await res.json();
+  if(data.success){
+    alert("提交成功，等待商家确认收款！");
+    location.href = "/mine.html";
+  }
+}
+</script>
+</body>
+</html>
