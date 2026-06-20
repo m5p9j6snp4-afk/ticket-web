@@ -66,10 +66,9 @@ fileInput.onchange = async function(e){
   }
 }
 async function submitFlightPay(){
-  if(!imgUrl){alert("请上传截图");return;}
   const res = await fetch(`${API_BASE}/api/upload-flight-pay`,{
     method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({orderNo,imgUrl})
+    body:JSON.stringify({orderNo,imgUrl:imgUrl || ""})
   });
   const data = await res.json();
   if(data.success){
