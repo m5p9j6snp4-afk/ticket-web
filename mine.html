@@ -28,7 +28,7 @@ header a{color:#fff;text-decoration:none}
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 // 简易演示：固定取测试订单，正式可加用户登录存储
 async function loadAllOrders(){
-  const res = await fetch(`${API_BASE}/api/admin/list?pwd=你的后台密码`);
+  const res = await fetch(`${API_BASE}/api/admin/list?pwd=Rene123456`);
   const list = await res.json();
   const wrap = document.getElementById("orderList");
   if(list.length === 0){
