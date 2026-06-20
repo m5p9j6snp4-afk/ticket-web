@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 | 星耀旅行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
+body{background:#f8f9fa;padding:40px 20px}
+.login-box{max-width:420px;margin:0 auto}
+.title{font-size:24px;font-weight:500;margin-bottom:30px;text-align:center}
+.input-item{margin-bottom:16px}
+input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid #e5e7eb;font-size:15px}
+.btn-login{width:100%;padding:14px;background:#111;color:#fff;border:0;border-radius:12px;font-size:16px;margin-top:10px}
+.reg-tip{text-align:center;margin-top:20px;color:#666}
+.reg-tip a{color:#2563eb;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <h1 class="title">星耀旅行 登录</h1>
+  <div class="input-item">
+    <input id="phone" placeholder="输入手机号" type="tel">
+  </div>
+  <div class="input-item">
+    <input id="pwd" placeholder="输入登录密码" type="password">
+  </div>
+  <button class="btn-login" onclick="doLogin()">登录</button>
+  <div class="reg-tip">暂无账号？<a href="/register.html">立即注册</a></div>
+</div>
+<script>
+const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+async function doLogin(){
+  const phone = document.getElementById("phone").value.trim();
+  const pwd = document.getElementById("pwd").value.trim();
+  if(!phone||!pwd) return alert("请填写完整手机号和密码");
+  const res = await fetch(`${API_BASE}/api/user/login`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({phone,pwd})
+  });
+  const data = await res.json();
+  if(data.code !== 200) return alert(data.msg);
+  localStorage.setItem("userToken",data.token);
+  localStorage.setItem("userInfo",JSON.stringify(data.user));
+  alert("登录成功");
+  location.href="/";
+}
+</script>
+</body>
+</html>
