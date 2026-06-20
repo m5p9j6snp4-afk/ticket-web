@@ -3,20 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Re售票 | 演唱会购票平台</title>
+<title>星耀旅行 | 演唱会·机票预订平台</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, sans-serif}
-body{background:#f7f8fa}
-/* 导航栏 */
-nav{background:#0a0e17;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;position:sticky;top:0;z-index:99}
-.logo{color:#fff;font-size:20px;font-weight:bold}
-.nav-links a{color:#cdd2e0;text-decoration:none;margin-left:20px;font-size:14px}
-.nav-links a:hover{color:#fff}
-/* 容器 */
-.container{max-width:1200px;margin:40px auto;padding:0 16px}
-.page-title{font-size:24px;margin-bottom:28px;color:#111}
-/* 演出卡片列表 */
-.event-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+body{background:#f7f8fa;padding-bottom:72px}
+/* 顶部域名+会员栏 */
+.top-header{background:#0a0e17;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.site-domain{color:#fff;font-size:19px;font-weight:bold}
+.member-btn{padding:6px 14px;border-radius:22px;background:#6366f1;color:#fff;border:none;font-size:14px}
+/* 一级分类栏 */
+.cat1-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 16px}
+.cat1-item{background:#fff;border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);cursor:pointer}
+.cat1-item p{margin-top:6px;font-size:14px;color:#222}
+/* 二级分类 */
+.cat2-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 16px 18px}
+.cat2-item{background:#fff;border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);cursor:pointer}
+.cat2-item p{margin-top:6px;font-size:14px;color:#222}
+/* 更多下拉面板 */
+.more-panel{margin:0 16px 18px;background:#fff;border-radius:14px;padding:16px;display:none;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.more-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.more-cell{text-align:center;padding:10px;font-size:14px;color:#444}
+/* 搜索框 */
+.search-box{margin:0 16px 24px}
+.search-input{width:100%;padding:14px 18px;border-radius:12px;border:1px solid #e2e8f0;font-size:15px;background:#fff}
+/* 板块通用标题 */
+.section-title{padding:0 16px;margin:24px 0 12px;font-size:18px;font-weight:600;color:#111}
+/* 横向滑动卡片容器 */
+.slide-wrap{display:flex;gap:14px;padding:0 16px;overflow-x:auto;padding-bottom:8px}
+.slide-wrap::-webkit-scrollbar{height:4px}
+.slide-card{min-width:260px;background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04);padding:16px}
+/* 演唱会演出卡片 */
+.event-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;padding:0 16px}
 .event-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
 .event-poster{width:100%;height:360px;object-fit:cover}
 .event-body{padding:18px}
@@ -26,31 +43,128 @@ nav{background:#0a0e17;display:flex;align-items:center;justify-content:space-bet
 .btn-buy{width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px}
 .btn-buy:active{opacity:0.9}
 .empty-tip{text-align:center;padding:80px 0;color:#999;font-size:16px}
+/* 底部导航 */
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e5e7eb;z-index:99}
+.nav-cell{flex:1;text-align:center;padding:12px 0}
+.nav-cell p{font-size:12px;margin-top:4px;color:#666}
+.nav-cell.active p{color:#6366f1;font-weight:500}
 </style>
 </head>
 <body>
-<nav>
-  <div class="logo">星耀售票</div>
-  <div class="nav-links">
-    <a href="/">首页</a>
-    <a href="/flight.html">机票预订</a>
-    <a href="/mine.html">我的订单</a>
-    <a href="/admin.html">商家后台</a>
-    <a href="/admin-add-event.html">发布演唱会</a>
-  </div>
-</nav>
-<div class="container">
-  <h2 class="page-title">热门演唱会</h2>
-  <div class="event-wrap" id="eventList"></div>
+<!-- 顶部：域名 + 会员等级 -->
+<div class="top-header">
+  <div class="site-domain">rene0824.com</div>
+  <button class="member-btn" onclick="openMemberRule()">银级会员</button>
 </div>
+
+<!-- 一级分类：住宿、机票、机票+酒店、高铁/火车 -->
+<div class="cat1-wrap">
+  <div class="cat1-item">
+    <p>住宿</p>
+  </div>
+  <div class="cat1-item" onclick="location.href='/flight.html'">
+    <p>机票</p>
+  </div>
+  <div class="cat1-item">
+    <p>机票+酒店</p>
+  </div>
+  <div class="cat1-item">
+    <p>高铁/火车</p>
+  </div>
+</div>
+
+<!-- 二级分类：民宿、门票、租车接送、更多 -->
+<div class="cat2-wrap">
+  <div class="cat2-item">
+    <p>民宿</p>
+  </div>
+  <div class="cat2-item">
+    <p>演唱会门票</p>
+  </div>
+  <div class="cat2-item">
+    <p>租车/机场接送</p>
+  </div>
+  <div class="cat2-item" onclick="toggleMoreBox()">
+    <p>更多</p>
+  </div>
+</div>
+
+<!-- 更多下拉面板 -->
+<div class="more-panel" id="moreBox">
+  <div class="more-row">
+    <div class="more-cell">邮轮</div>
+    <div class="more-cell">礼品卡</div>
+    <div class="more-cell">旅游保险</div>
+    <div class="more-cell">船票</div>
+    <div class="more-cell">eSIM</div>
+    <div class="more-cell">合作伙伴</div>
+    <div class="more-cell">关于星耀旅行</div>
+  </div>
+</div>
+
+<!-- 搜索框 -->
+<div class="search-box">
+  <input class="search-input" placeholder="搜索演唱会、航班、目的地、酒店">
+</div>
+
+<!-- 优惠活动板块 -->
+<h3 class="section-title">优惠 & 限时活动</h3>
+<div class="slide-wrap">
+  <div class="slide-card">演唱会限时折扣</div>
+  <div class="slide-card">机票满减优惠</div>
+  <div class="slide-card">旅行套餐特价</div>
+</div>
+
+<!-- 旅游攻略板块 -->
+<h3 class="section-title">旅游攻略</h3>
+<div class="slide-wrap">
+  <div class="slide-card">香港短途出行</div>
+  <div class="slide-card">澳门两日游</div>
+  <div class="slide-card">日韩自由行指南</div>
+</div>
+
+<!-- 热门目的地推广 -->
+<h3 class="section-title">热门目的地推荐</h3>
+<div class="slide-wrap">
+  <div class="slide-card">泰国</div>
+  <div class="slide-card">日本</div>
+  <div class="slide-card">韩国</div>
+  <div class="slide-card">内地城市</div>
+</div>
+
+<!-- 热门演唱会列表（原有功能完整保留） -->
+<h3 class="section-title">热门演唱会</h3>
+<div class="event-wrap" id="eventList"></div>
+
+<!-- 底部固定导航栏 -->
+<div class="bottom-nav">
+  <div class="nav-cell active">
+    <p>首页</p>
+  </div>
+  <div class="nav-cell">
+    <p>讯息</p>
+  </div>
+  <div class="nav-cell" onclick="location.href='/admin-add-event.html'">
+    <p>发布</p>
+  </div>
+  <div class="nav-cell" onclick="location.href='/mine.html'">
+    <p>我的行程</p>
+  </div>
+  <div class="nav-cell">
+    <p>账户</p>
+  </div>
+</div>
+
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+
+// 加载演唱会列表（原版逻辑不变）
 async function loadEvents(){
   const res = await fetch(`${API_BASE}/api/events`);
   const list = await res.json();
   const wrap = document.getElementById("eventList");
   if(list.length === 0){
-    wrap.innerHTML = `<div class="empty-tip">暂无演出，请前往后台发布演唱会</div>`;
+    wrap.innerHTML = `<div class="empty-tip">暂无演出，请前往发布页面新增演唱会</div>`;
     return;
   }
   list.forEach(item=>{
@@ -68,7 +182,29 @@ async function loadEvents(){
     `
   })
 }
-function goSeat(id){location.href=`/seat.html?id=${id}`}
+function goSeat(id){
+  location.href=`/seat.html?id=${id}`;
+}
+
+// 展开/收起更多分类面板
+function toggleMoreBox(){
+  const box = document.getElementById("moreBox");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+// 会员等级说明弹窗
+function openMemberRule(){
+  alert(`会员等级规则
+初始等级：银级
+升级阶梯（消费金额为上一档300%）
+1. 银级 → 金级：累计消费$2000
+2. 金级 → 白金级
+3. 白金级 → 钻石级
+4. 钻石级 → 钻石+级
+5. 钻石+级 → 黑钻级`);
+}
+
+// 页面加载执行
 loadEvents();
 </script>
 </body>
