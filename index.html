@@ -1,1 +1,58 @@
-1
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>演唱会票务平台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system}
+header{background:#111;color:#fff;padding:16px;display:flex;gap:24px;align-items:center}
+header a{color:#fff;text-decoration:none;font-size:15px}
+.container{max-width:1100px;margin:30px auto;padding:0 16px}
+.event-card{border:1px solid #eee;border-radius:10px;padding:18px;margin-bottom:20px}
+.event-card h3{margin-bottom:8px}
+.event-card p{color:#555;margin:4px 0}
+.btn{background:#007aff;color:#fff;border:none;padding:9px 16px;border-radius:6px;margin-top:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <a href="/">首页</a>
+  <a href="/list.html">全部演出</a>
+  <a href="/mine.html">我的订单</a>
+  <a href="/admin.html">商家后台</a>
+</header>
+<div class="container">
+  <h2>热门演唱会</h2>
+  <div id="eventList"></div>
+</div>
+<script>
+// 这里填你的Worker接口地址
+const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+
+async function loadEvents(){
+  const res = await fetch(`${API_BASE}/api/events`);
+  const list = await res.json();
+  const wrap = document.getElementById("eventList");
+  if(list.length === 0){
+    wrap.innerHTML = "<p>暂无演出，请后台添加</p>";
+    return;
+  }
+  list.forEach(item=>{
+    wrap.innerHTML += `
+      <div class="event-card">
+        <h3>${item.name}</h3>
+        <p>演出日期：${item.date}</p>
+        <p>票价：HK$${item.price}</p>
+        <button class="btn" onclick="goBuy(${item.id})">立即购票</button>
+      </div>
+    `
+  })
+}
+function goBuy(id){
+  location.href = `/buy.html?id=${id}`;
+}
+loadEvents();
+</script>
+</body>
+</html>
