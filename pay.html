@@ -3,90 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>付款</title>
+<title>支付凭证上传 | 星耀售票</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-header{background:#111;color:#fff;padding:16px}
-header a{color:#fff;text-decoration:none}
-.container{max-width:500px;margin:30px auto;padding:0 16px;text-align:center}
-.qr-box{border:1px solid #eee;padding:20px;border-radius:10px;margin:20px 0}
-.tip{color:#f00;margin:10px 0}
-.upload-area{border:2px dashed #007aff;padding:30px;border-radius:8px;margin:15px 0}
-.btn{background:#007aff;color:#fff;border:none;padding:12px;width:100%;border-radius:6px;font-size:16px}
-.preview{max-width:100%;max-height:200px;margin:10px 0;display:none}
+body{background:#f7f8fa}
+nav{background:#0a0e17;padding:14px 16px}
+nav a{color:#fff;text-decoration:none}
+.container{max-width:520px;margin:30px auto;padding:0 14px;text-align:center}
+.qr-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:24px}
+.tip-red{color:#ef4444;margin:10px 0;font-size:14px}
+.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:36px 16px;margin:20px 0;color:#6366f1}
+.preview{max-width:100%;max-height:220px;border-radius:10px;margin:10px 0;display:none}
+.tip-text{margin:8px 0;font-size:14px}
+.btn-sub{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px}
 </style>
 </head>
 <body>
-<header>
-  <a href="/">返回首页</a>
-</header>
+<nav><a href="javascript:history.back()">← 返回</a></nav>
 <div class="container">
   <h3>订单号：<span id="orderNo"></span></h3>
-  <div class="qr-box">
-    <p>请使用 AlipayHK / 内地支付宝扫码转账</p>
-    <p class="tip">转账备注填写上方订单号，方便核对</p>
-    <img src="https://cdn.phototourl.com/free/2026-06-20-d7e35ddf-8dd2-49cc-acba-124e3c7dac59.jpg" width="220" alt="收款码">
+  <div class="qr-card">
+    <p>请使用 AlipayHK / 支付宝转账</p>
+    <p class="tip-red">转账备注填写订单号，方便后台核对</p>
+    <img src="这里替换你的收款码图片链接" width="240" alt="收款二维码">
   </div>
-
-  <!-- 相册选择图片组件，手机点这里直接打开相册 -->
-  <div class="upload-area">
-    <input type="file" id="fileInput" accept="image/*" style="display:none">
-    <p onclick="document.getElementById('fileInput').click()">点击此处，从相册选择转账截图</p>
+  <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+    <p>点击此处，从手机相册选择转账截图</p>
   </div>
-  <img id="previewImg" class="preview" alt="截图预览">
-  <p id="tipText"></p>
-
-  <button class="btn" onclick="submitPay()">提交付款凭证</button>
+  <input type="file" id="fileInput" accept="image/*" style="display:none">
+  <img class="preview" id="previewImg">
+  <p class="tip-text" id="tipText"></p>
+  <button class="btn-sub" onclick="submitPay()">提交付款凭证</button>
 </div>
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const urlParams = new URLSearchParams(location.search);
 const orderNo = urlParams.get("orderNo");
 document.getElementById("orderNo").innerText = orderNo;
-
 let finalImgUrl = "";
 const fileInput = document.getElementById("fileInput");
 const previewImg = document.getElementById("previewImg");
 const tipText = document.getElementById("tipText");
 
-// 监听相册选图
 fileInput.onchange = async function(e){
-  const file = e.target.files[0];
-  if(!file) return;
+  const file = e.target.files[0];if(!file)return;
   tipText.innerText = "正在上传图片...";
-  // 临时方案：免费 Telegraph 图床，无需自己搭建存储
-  const formData = new FormData();
-  formData.append("file", file);
+  const formData = new FormData();formData.append("file", file);
   try{
-    const res = await fetch("https://telegra.ph/upload", {
-      method: "POST",
-      body: formData
-    });
+    const res = await fetch("https://telegra.ph/upload", {method:"POST", body:formData});
     const json = await res.json();
     finalImgUrl = "https://telegra.ph" + json[0].src;
-    previewImg.src = finalImgUrl;
-    previewImg.style.display = "block";
-    tipText.innerText = "图片上传完成，可以提交订单";
-  }catch(err){
-    tipText.innerText = "上传失败，请重新选择图片";
-  }
+    previewImg.src = finalImgUrl;previewImg.style.display = "block";
+    tipText.innerText = "图片上传完成，可提交凭证";
+  }catch(err){tipText.innerText = "上传失败，请切换5G网络重试";}
 }
-
 async function submitPay(){
-  if(!finalImgUrl){
-    alert("请先从相册选择转账截图");
-    return;
-  }
+  if(!finalImgUrl){alert("请先上传转账截图");return;}
   const res = await fetch(`${API_BASE}/api/upload-pay`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
+    method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({orderNo,imgUrl:finalImgUrl})
   });
   const data = await res.json();
-  if(data.success){
-    alert("提交成功，等待商家确认收款！");
-    location.href = "/mine.html";
-  }
+  if(data.success){alert("凭证提交成功，等待商家核验！");location.href="/mine.html";}
 }
 </script>
 </body>
