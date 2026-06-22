@@ -68,7 +68,7 @@ body{background:#f7f8fa;padding-bottom:70px}
 <script>
 window.addEventListener("load", async function() {
   try {
-    // 核心更改：显式在 JavaScript 阶段手工注入翻译映射，强制覆盖英文
+    // 核心更改：在此处一并完美同步硬编码全套汉化补丁
     await Clerk.load({
       localization: {
         signIn: {
@@ -87,6 +87,16 @@ window.addEventListener("load", async function() {
             actionLink: "立即登录"
           }
         },
+        formFieldLabel__firstName: "名",
+        formFieldLabel__lastName: "姓",
+        formFieldLabel__emailAddress: "电子邮箱地址",
+        formFieldLabel__password: "密码",
+        formFieldPlaceholder__firstName: "请输入您的名（选填）",
+        formFieldPlaceholder__lastName: "请输入您的姓（选填）",
+        formFieldPlaceholder__emailAddress: "请输入您的电子邮箱地址",
+        formFieldPlaceholder__password: "请输入您的密码",
+        formButtonPrimary: "继续",
+        dividerText: "或",
         socialButtonsBlockButton: "使用 {{provider|titleize}} 登录"
       }
     });
