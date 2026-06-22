@@ -17,7 +17,6 @@ nav a{color:#fff;text-decoration:none}
 .btn-ok{background:#16a34a;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
 .btn-no{background:#ef4444;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
 h3{margin-top:40px;margin-bottom:16px;color:#222}
-/* 底部导航统一样式 */
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
 .tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
@@ -52,73 +51,47 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
-let adminPwd = "";
+let adminPwd = "Rene 12345678"; 
 
-// 页面初始化 Clerk登录+管理员权限校验
 window.onload = async function(){
   await clerk.load({
     localization: {
       locale: "zh-CN",
-      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" } },
-      signUp: { start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" } },
-      socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
-      dividerText: "或",
-      formButtonPrimary: "继续",
-      formFieldLabel__firstName: "名",
-      formFieldLabel__lastName: "姓",
-      formFieldLabel__emailAddress: "电子邮箱",
-      formFieldLabel__password: "密码"
+      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续" } }
     }
   });
 
   const user = clerk.user;
-  // 未登录直接跳转首页
   if(!user){
     alert("请先登录账号");
-    clerk.openSignIn({
-      afterSignInUrl: window.location.href,
-      afterSignUpUrl: window.location.href
-    });
+    clerk.openSignIn({ afterSignInUrl: window.location.href });
     return;
   }
 
+  // 🛡️ 核心修复：提取 Google 登录用户的 Email 地址
   const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
 
-  // 🛠️ 站长独立绿道校验（代码层锁死）
-  if (email === "1477rene@gmail.com") {
-    // 强制放行管理员界面
+  // 🌟 只要是你的 Google 邮箱，直接无条件放行，不再检查 Clerk 后台标签
+  if (email === "1477rene@gmail.com" || meta.role === "admin") {
     document.getElementById("adminWrap").style.display = "block";
-    document.getElementById("noPermWrap").style.style.display = "none";
-    // 自动模拟后端所需的认证密钥
-    adminPwd = meta.admin_password || "admin"; 
-    
-    console.log("🎉 超级管理员通过邮箱直接验证成功！");
+    document.getElementById("noPermWrap").style.display = "none";
+    console.log("🎉 Google 超级管理员已通过邮箱识别直接登入！");
     renderLoader();
-    return;
+  } else {
+    document.getElementById("noPermWrap").style.display = "block";
+    document.getElementById("adminWrap").style.display = "none";
   }
-
-  // 普通用户权限逻辑（依然保持原逻辑检测）
-  if(!meta.is_admin){
-    document.getElementById("noPermWrap").style.display="block";
-    document.getElementById("adminWrap").style.display="none";
-    return;
-  }
-
-  // 兜底进入常规管理员
-  document.getElementById("adminWrap").style.display="block";
-  adminPwd = meta.admin_password; 
-  renderLoader();
 }
 
 async function renderLoader() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/list?pwd=${adminPwd}`);
+    const res = await fetch(`${API_BASE}/api/admin/list?pwd=${encodeURIComponent(adminPwd)}`);
     const data = await res.json();
     renderOrders(data);
     loadFlightOrders();
   } catch(err) {
-    console.error("同步数据库失败：", err);
+    console.error(err);
   }
 }
 
@@ -126,7 +99,6 @@ function renderOrders(list){
   const wrap = document.getElementById("orderList");wrap.innerHTML="";
   if(!list || list.length===0){wrap.innerHTML="<p>暂无演唱会订单</p>";return;}
   list.forEach(item=>{
-    // 兼容单号字段读取
     const currentNo = item.order_no || item.orderNo || "";
     wrap.innerHTML += `
       <div class="order-card">
@@ -147,29 +119,27 @@ function renderOrders(list){
 
 async function setPaid(orderNo){
   if(!orderNo) return alert("单号错误");
-  const res = await fetch(`${API_BASE}/api/admin/set-status`,{
+  await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"paid"})
   });
-  alert("操作成功，刷新页面");location.reload();
+  alert("操作成功");location.reload();
 }
 
 async function setReject(orderNo){
   if(!orderNo) return alert("单号错误");
-  const res = await fetch(`${API_BASE}/api/admin/set-status`,{
+  await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"reject"})
   });
-  alert("已驳回订单，刷新页面");location.reload();
+  alert("已驳回订单");location.reload();
 }
 
-// 机票订单相关函数
 async function loadFlightOrders(){
   try {
-    const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${adminPwd}`);
+    const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${encodeURIComponent(adminPwd)}`);
     const list = await res.json();
-    const wrap = document.getElementById("flightOrderList");
-    wrap.innerHTML="";
+    const wrap = document.getElementById("flightOrderList");wrap.innerHTML="";
     if(!list || list.length===0){wrap.innerHTML="<p>暂无机票订单</p>";return;}
     list.forEach(item=>{
       let statusText = item.status=="unpaid"?"未上传凭证":item.status=="checking"?"待核验":item.status=="paid"?"已确认":"已驳回";
@@ -191,27 +161,23 @@ async function loadFlightOrders(){
         </div>
       `
     })
-  } catch(e) {
-    console.error("加载机票失败：", e);
-  }
+  } catch(e) {}
 }
 
 async function flightPaid(no){
-  if(!no) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/flight-set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"paid"})
   });
-  alert("机票订单确认收款成功，刷新页面");location.reload();
+  alert("机票订单确认收款成功");location.reload();
 }
 
 async function flightReject(no){
-  if(!no) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/flight-set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"reject"})
   });
-  alert("机票订单已驳回，刷新页面");location.reload();
+  alert("机票订单已驳回");location.reload();
 }
 </script>
 </body>
