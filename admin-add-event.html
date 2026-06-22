@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Clerk登录SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 <title>发布演唱会 | Re旅行商家后台</title>
 <style>
@@ -30,7 +29,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 </head>
 <body>
 <nav><a href="/">← 返回首页</a></nav>
-<div class="container" id="permWrap">
+<div class="container" id="permWrap" style="display:none">
   <div class="no-perm">当前账号无管理员发布权限</div>
 </div>
 <div class="container" id="formWrap" style="display:none">
@@ -57,7 +56,6 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   <button class="btn-save" onclick="submitAdd()">保存发布</button>
 </div>
 
-<!-- 全站统一底部导航 -->
 <div class="bottom-tab">
   <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
   <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
@@ -78,21 +76,53 @@ const tip = document.getElementById("uploadTip");
 
 // 页面加载鉴权
 window.onload = async function(){
-  await clerk.load();
+  // 注入全套中文汉化映射
+  await clerk.load({
+    localization: {
+      locale: "zh-CN",
+      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" } },
+      signUp: { start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" } },
+      socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
+      dividerText: "或",
+      formButtonPrimary: "继续",
+      formFieldLabel__firstName: "名",
+      formFieldLabel__lastName: "姓",
+      formFieldLabel__emailAddress: "电子邮箱",
+      formFieldLabel__password: "密码"
+    }
+  });
+
   const user = clerk.user;
-  // 未登录拦截
+  // 未登录拦截并弹出登录框
   if(!user){
     alert("请先登录账号");
-    location.href="/";
+    clerk.openSignIn({
+      afterSignInUrl: window.location.href,
+      afterSignUpUrl: window.location.href
+    });
     return;
   }
+  
+  const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
-  // 判断管理员权限
+
+  // 🛠️ 站长独立绿道校验（邮箱锁死）
+  if (email === "1477rene@gmail.com") {
+    adminPassword = meta.admin_password || "admin"; 
+    document.getElementById("formWrap").style.display = "block";
+    document.getElementById("permWrap").style.display = "none";
+    console.log("🎉 发布页面：超级管理员通过邮箱直接验证通过！");
+    return;
+  }
+
+  // 普通用户的常规管理员检测逻辑
   if(!meta.is_admin){
     document.getElementById("permWrap").style.display = "block";
+    document.getElementById("formWrap").style.display = "none";
     return;
   }
-  // 管理员展示发布表单，读取后台密码
+
+  // 兜底正常管理员放行
   adminPassword = meta.admin_password;
   document.getElementById("formWrap").style.display = "block";
   document.getElementById("permWrap").style.display = "none";
