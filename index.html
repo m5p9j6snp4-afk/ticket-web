@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Re旅行 | 演唱会&机票预订</title>
-<!-- Clerk 登录SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<script 
+  async 
+  crossorigin="anonymous" 
+  data-clerk-publishable-key="pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ" 
+  src="https://top-ant-1.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js?_clerk_locale=zh-CN" 
+  type="text/javascript">
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,system-ui,sans-serif}
 body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
@@ -50,13 +55,11 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 </style>
 </head>
 <body>
-<!-- 顶部栏 -->
 <div class="header-top">
   <div class="logo-text">Re旅行</div>
-  <button class="member-tag" id="memberBtn">银级会员</button>
+  <button class="member-tag" id="memberBtn">加载中...</button>
 </div>
 
-<!-- 一级分类 -->
 <div class="section-wrap">
   <div class="cat-row-1">
     <div class="cat-item" onclick="location.href='/hotel.html'"><p>住宿</p></div>
@@ -72,7 +75,6 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
   </div>
 </div>
 
-<!-- 更多隐藏面板 -->
 <div class="more-container" id="morePanel">
   <div class="more-grid">
     <div class="more-item">邮轮</div>
@@ -85,12 +87,10 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
   </div>
 </div>
 
-<!-- 搜索 -->
 <div class="search-bar">
   <input class="search-input" placeholder="搜索目的地、航班、演唱会">
 </div>
 
-<!-- 优惠活动 -->
 <div class="section-wrap">
   <div class="title-sm">限时优惠</div>
   <div class="slider-box">
@@ -100,7 +100,6 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
   </div>
 </div>
 
-<!-- 旅游攻略 -->
 <div class="section-wrap">
   <div class="title-sm">旅游攻略</div>
   <div class="slider-box">
@@ -110,7 +109,6 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
   </div>
 </div>
 
-<!-- 热门目的地 -->
 <div class="section-wrap">
   <div class="title-sm">热门目的地</div>
   <div class="slider-box">
@@ -121,13 +119,11 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
   </div>
 </div>
 
-<!-- 热门演唱会 -->
 <div class="section-wrap">
   <div class="title-sm">热门演唱会</div>
   <div class="event-grid" id="eventList"></div>
 </div>
 
-<!-- 底部导航（全部可点击） -->
 <div class="bottom-tab">
   <div class="tab-cell active" onclick="location.href='/'"><p>首页</p></div>
   <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
@@ -138,36 +134,34 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-let clerk;
 
-window.onload = async function(){
-  clerk = new Clerk(CLERK_PUB_KEY);
-  await clerk.load();
-  const memberBtn = document.getElementById("memberBtn");
-  const user = clerk.user;
+// 3. 规范标准 Vanilla JS 状态生命周期监听
+window.addEventListener("load", async function(){
+  try {
+    await Clerk.load();
+    const memberBtn = document.getElementById("memberBtn");
+    const user = Clerk.user;
 
-  if (!user) {
-    memberBtn.innerText = "登录/注册";
-    memberBtn.onclick = () => clerk.openSignIn();
-  } else {
-    const userLevel = user.publicMetadata?.member_level || "银级会员";
-    memberBtn.innerText = userLevel;
-    memberBtn.onclick = () => {
-      showMemberRule();
-      location.href="/account.html";
-    };
+    if (!user) {
+      memberBtn.innerText = "登录/注册";
+      memberBtn.onclick = () => Clerk.openSignIn();
+    } else {
+      const userLevel = user.publicMetadata?.member_level || "银级会员";
+      memberBtn.innerText = userLevel;
+      memberBtn.onclick = () => {
+        location.href = "/account.html";
+      };
+    }
+  } catch (error) {
+    console.error("Clerk 初始化失败:", error);
+    document.getElementById("memberBtn").innerText = "账户";
   }
   loadEvents();
-}
+});
 
-// 底部「账户」按钮
+// 4. 彻底解决点击死循环/不跳转问题：直接放行交给账户页处理
 function goAccount(){
-  if (!clerk || !clerk.user) {
-    clerk.openSignUp();
-  } else {
-    location.href="/account.html";
-  }
+  location.href = "/account.html";
 }
 
 // 加载演唱会列表
@@ -203,11 +197,6 @@ function goSeat(id){
 function toggleMore(){
   const panel = document.getElementById("morePanel");
   panel.style.display = panel.style.display === "block" ? "none" : "block";
-}
-
-// 会员等级弹窗
-function showMemberRule(){
-  alert("Re旅行会员体系\n初始：银级\n银→金：累计消费$2000\n每级消费为上一级300%\n等级：银 / 金 / 白金 / 钻石 / 钻石+ / 黑钻");
 }
 </script>
 </body>
