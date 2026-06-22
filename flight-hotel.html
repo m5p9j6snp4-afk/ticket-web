@@ -4,17 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>更多服務 | Re旅行</title>
+<title>替換頁面名稱 | Re旅行</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f7f8fa;padding-bottom:90px;color:#222}
 .top-header{background:#000;color:#fff;padding:22px 18px;display:flex;align-items:center;gap:12px}
 .back{cursor:pointer;font-size:16px}
 .page-title{font-size:20px;font-weight:600}
-.container{padding:20px}
-.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.item-btn{background:#fff;border-radius:14px;padding:20px 6px;text-align:center;cursor:pointer}
-.item-btn p{font-size:15px;color:#111}
+.container{padding:25px 18px}
+.tip-card{background:#fff;border-radius:16px;padding:30px 20px;text-align:center;margin-top:20px}
+.tip-card p{color:#666;margin-top:8px}
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
 .tab-cell p{font-size:12px;color:#777;margin-top:4px;pointer-events:none}
@@ -24,18 +23,13 @@ body{background:#f7f8fa;padding-bottom:90px;color:#222}
 <body>
 <div class="top-header">
     <span class="back" onclick="location.href='index.html'">←</span>
-    <h2 class="page-title">更多服務</h2>
+    <h2 class="page-title">替換頁面名稱</h2>
 </div>
 
 <div class="container">
-    <div class="more-grid">
-        <div class="item-btn" onclick="location.href='cruise.html'"><p>邮轮</p></div>
-        <div class="item-btn" onclick="location.href='gift-card.html'"><p>礼品卡</p></div>
-        <div class="item-btn" onclick="location.href='insurance.html'"><p>旅游保险</p></div>
-        <div class="item-btn" onclick="location.href='ship.html'"><p>船票</p></div>
-        <div class="item-btn" onclick="location.href='esim.html'"><p>eSIM</p></div>
-        <div class="item-btn" onclick="location.href='partner.html'"><p>合作伙伴</p></div>
-        <div class="item-btn" onclick="location.href='about.html'"><p>关于Re旅行</p></div>
+    <div class="tip-card">
+        <h3>功能開發中</h3>
+        <p>敬請期待，後續會上線完整預訂服務</p>
     </div>
 </div>
 
@@ -44,7 +38,7 @@ body{background:#f7f8fa;padding-bottom:90px;color:#222}
   <div class="tab-cell" onclick="location.href='message.html'"><p>讯息</p></div>
   <div class="tab-cell" onclick="location.href='admin-add-event.html'"><p>发布</p></div>
   <div class="tab-cell" onclick="location.href='mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell active" onclick="location.href='account.html'"><p>账户</p></div>
+  <div class="tab-cell" onclick="location.href='account.html'"><p>账户</p></div>
 </div>
 
 <script>
