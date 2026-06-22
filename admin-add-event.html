@@ -3,26 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>发布演唱会 | 商家后台</title>
+<!-- Clerk登录SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<title>发布演唱会 | Re旅行商家后台</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa}
+body{background:#f7f8fa;padding-bottom:70px}
 nav{background:#0a0e17;padding:14px 16px}
 nav a{color:#fff;text-decoration:none}
 .container{max-width:620px;margin:30px auto;padding:0 14px}
 .page-title{text-align:center;font-size:22px;margin-bottom:28px}
-.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:40px 16px;text-align:center;color:#6366f1;margin-bottom:20px}
+.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:40px 16px;text-align:center;color:#6366f1;margin-bottom:20px;cursor:pointer}
 .preview{max-width:100%;max-height:240px;border-radius:10px;display:none;margin:10px 0}
 .form-item{margin:20px 0}
 label{display:block;margin-bottom:8px;font-weight:500}
 input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:15px}
-.btn-save{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px}
+.btn-save{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;cursor:pointer}
 .tip{font-size:14px;color:#666}
+.no-perm{text-align:center;margin-top:80px;color:#ef4444;font-size:18px}
+/* 底部导航统一样式 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
+.tab-cell.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
 <nav><a href="/">← 返回首页</a></nav>
-<div class="container">
+<div class="container" id="permWrap">
+  <div class="no-perm">当前账号无管理员发布权限</div>
+</div>
+<div class="container" id="formWrap" style="display:none">
   <h2 class="page-title">发布新演唱会</h2>
   <div class="upload-box" onclick="document.getElementById('imgFile').click()">
     <p>点击上传演唱会海报（相册选择）</p>
@@ -45,13 +56,49 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
   <button class="btn-save" onclick="submitAdd()">保存发布</button>
 </div>
+
+<!-- 全站统一底部导航 -->
+<div class="bottom-tab">
+  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab-cell active"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
+  <div class="tab-cell" onclick="location.href='/account.html'"><p>账户</p></div>
+</div>
+
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
+const clerk = new Clerk(CLERK_PUB_KEY);
 let posterUrl = "";
+let adminPassword = "";
 const fileInput = document.getElementById("imgFile");
 const preview = document.getElementById("imgPreview");
 const tip = document.getElementById("uploadTip");
 
+// 页面加载鉴权
+window.onload = async function(){
+  await clerk.load();
+  const user = clerk.user;
+  // 未登录拦截
+  if(!user){
+    alert("请先登录账号");
+    location.href="/";
+    return;
+  }
+  const meta = user.publicMetadata || {};
+  // 判断管理员权限
+  if(!meta.is_admin){
+    document.getElementById("permWrap").style.display = "block";
+    return;
+  }
+  // 管理员展示发布表单，读取后台密码
+  adminPassword = meta.admin_password;
+  document.getElementById("formWrap").style.display = "block";
+  document.getElementById("permWrap").style.display = "none";
+}
+
+// 海报上传逻辑（完全保留原有功能）
 fileInput.onchange = async function(e){
   const file = e.target.files[0];if(!file)return;
   tip.innerText = "图片上传中...";
@@ -64,20 +111,20 @@ fileInput.onchange = async function(e){
     tip.innerText = "海报上传完成";
   }catch(err){tip.innerText = "上传失败，切换5G网络重试";}
 }
+
+// 提交发布，自动带入管理员密码，无需弹窗输入
 async function submitAdd(){
-  const pwd = prompt("请输入管理员后台密码");
-  if(!pwd)return;
   const name = document.getElementById("eventName").value.trim();
   const date = document.getElementById("eventDate").value;
   const price = Number(document.getElementById("eventPrice").value);
   if(!name||!date||!price){alert("请完整填写全部演出信息");return;}
-  const res = await fetch(`${API_BASE}/api/admin/add-event?pwd=${pwd}`,{
+  const res = await fetch(`${API_BASE}/api/admin/add-event?pwd=${adminPassword}`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({name,date,price,poster:posterUrl})
   });
   const data = await res.json();
   if(data.success){alert("演唱会发布成功！刷新首页查看");location.reload();}
-  else alert(data.msg || "发布失败，密码错误");
+  else alert(data.msg || "发布失败");
 }
 </script>
 </body>
