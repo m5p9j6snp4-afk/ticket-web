@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Clerk 登录SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 <title>商家后台 | Re旅行订单管理</title>
 <style>
@@ -27,7 +26,7 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
 </head>
 <body>
 <nav><a href="/">← 返回首页</a></nav>
-<div class="container" id="noPermWrap">
+<div class="container" id="noPermWrap" style="display:none">
   <div class="no-perm-box">
     <h2>无管理员访问权限</h2>
     <p>当前账号非后台管理员，无法查看订单管理</p>
@@ -41,7 +40,6 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
   <div id="flightOrderList"></div>
 </div>
 
-<!-- 全站统一底部导航 -->
 <div class="bottom-tab">
   <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
   <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
@@ -58,57 +56,106 @@ let adminPwd = "";
 
 // 页面初始化 Clerk登录+管理员权限校验
 window.onload = async function(){
-  await clerk.load();
+  await clerk.load({
+    localization: {
+      locale: "zh-CN",
+      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" } },
+      signUp: { start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" } },
+      socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
+      dividerText: "或",
+      formButtonPrimary: "继续",
+      formFieldLabel__firstName: "名",
+      formFieldLabel__lastName: "姓",
+      formFieldLabel__emailAddress: "电子邮箱",
+      formFieldLabel__password: "密码"
+    }
+  });
+
   const user = clerk.user;
   // 未登录直接跳转首页
   if(!user){
     alert("请先登录账号");
-    location.href="/";
+    clerk.openSignIn({
+      afterSignInUrl: window.location.href,
+      afterSignUpUrl: window.location.href
+    });
     return;
   }
-  // 判断是否管理员（Clerk用户元数据标记is_admin:true）
+
+  const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
+
+  // 🛠️ 站长独立绿道校验（代码层锁死）
+  if (email === "1477rene@gmail.com") {
+    // 强制放行管理员界面
+    document.getElementById("adminWrap").style.display = "block";
+    document.getElementById("noPermWrap").style.style.display = "none";
+    // 自动模拟后端所需的认证密钥
+    adminPwd = meta.admin_password || "admin"; 
+    
+    console.log("🎉 超级管理员通过邮箱直接验证成功！");
+    renderLoader();
+    return;
+  }
+
+  // 普通用户权限逻辑（依然保持原逻辑检测）
   if(!meta.is_admin){
     document.getElementById("noPermWrap").style.display="block";
+    document.getElementById("adminWrap").style.display="none";
     return;
   }
-  // 管理员账号：显示后台，加载订单
+
+  // 兜底进入常规管理员
   document.getElementById("adminWrap").style.display="block";
-  adminPwd = meta.admin_password; // 从用户元数据读取后台密码
-  const res = await fetch(`${API_BASE}/api/admin/list?pwd=${adminPwd}`);
-  const data = await res.json();
-  renderOrders(data);
-  loadFlightOrders();
+  adminPwd = meta.admin_password; 
+  renderLoader();
+}
+
+async function renderLoader() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/list?pwd=${adminPwd}`);
+    const data = await res.json();
+    renderOrders(data);
+    loadFlightOrders();
+  } catch(err) {
+    console.error("同步数据库失败：", err);
+  }
 }
 
 function renderOrders(list){
   const wrap = document.getElementById("orderList");wrap.innerHTML="";
-  if(list.length===0){wrap.innerHTML="<p>暂无演唱会订单</p>";return;}
+  if(!list || list.length===0){wrap.innerHTML="<p>暂无演唱会订单</p>";return;}
   list.forEach(item=>{
+    // 兼容单号字段读取
+    const currentNo = item.order_no || item.orderNo || "";
     wrap.innerHTML += `
       <div class="order-card">
-        <h4>${item.event_name}</h4>
-        <p>订单号：${item.order_no}</p>
-        <p>购票人：${item.username} ${item.contact}</p>
-        <p>当前状态：${item.status}</p>
+        <h4>${item.event_name || "未知演出"}</h4>
+        <p>订单号：${currentNo}</p>
+        <p>购票人：${item.username || "游客"} ${item.contact || ""}</p>
+        <p>当前状态：${item.status || "未知"}</p>
         <p>邮箱：${item.email || "未填写"}</p>
         ${item.pay_img ? `<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a></p>`:"<p>未上传凭证</p>"}
         ${item.status=="checking" || item.status=="unpaid" ? `
-          <button class="btn-ok" onclick="setPaid('${item.orderNo}')">确认收款</button>
-          <button class="btn-no" onclick="setReject('${item.orderNo}')">驳回订单</button>
+          <button class="btn-ok" onclick="setPaid('${currentNo}')">确认收款</button>
+          <button class="btn-no" onclick="setReject('${currentNo}')">驳回订单</button>
         `:""}
       </div>
     `
   })
 }
+
 async function setPaid(orderNo){
+  if(!orderNo) return alert("单号错误");
   const res = await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"paid"})
   });
   alert("操作成功，刷新页面");location.reload();
 }
+
 async function setReject(orderNo){
+  if(!orderNo) return alert("单号错误");
   const res = await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"reject"})
@@ -118,39 +165,48 @@ async function setReject(orderNo){
 
 // 机票订单相关函数
 async function loadFlightOrders(){
-  const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${adminPwd}`);
-  const list = await res.json();
-  const wrap = document.getElementById("flightOrderList");
-  wrap.innerHTML="";
-  if(list.length===0){wrap.innerHTML="<p>暂无机票订单</p>";return;}
-  list.forEach(item=>{
-    let statusText = item.status=="unpaid"?"未上传凭证":item.status=="checking"?"待核验":item.status=="paid"?"已确认":"已驳回";
-    wrap.innerHTML += `
-      <div class="order-card">
-        <h4>${item.airline} ${item.route}</h4>
-        <p>机票订单号：${item.order_no}</p>
-        <p>起降时间：${item.flight_time}</p>
-        <p>乘机人：${item.passenger_names}</p>
-        <p>联系邮箱：${item.email || "无"}</p>
-        <p>应付金额：HK$${item.price}</p>
-        <p>订单状态：${statusText}</p>
-        ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
-        ${item.status=="checking" || item.status=="unpaid"?`
-          <button class="btn-ok" onclick="flightPaid('${item.orderNo}')">确认收款</button>
-          <button class="btn-no" onclick="flightReject('${item.orderNo}')">驳回订单</button>
-        `:""}
-      </div>
-    `
-  })
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${adminPwd}`);
+    const list = await res.json();
+    const wrap = document.getElementById("flightOrderList");
+    wrap.innerHTML="";
+    if(!list || list.length===0){wrap.innerHTML="<p>暂无机票订单</p>";return;}
+    list.forEach(item=>{
+      let statusText = item.status=="unpaid"?"未上传凭证":item.status=="checking"?"待核验":item.status=="paid"?"已确认":"已驳回";
+      const currentNo = item.order_no || item.orderNo || "";
+      wrap.innerHTML += `
+        <div class="order-card">
+          <h4>${item.airline || "未命名航班"} ${item.route || ""}</h4>
+          <p>机票订单号：${currentNo}</p>
+          <p>起降时间：${item.flight_time || "未排定"}</p>
+          <p>乘机人：${item.passenger_names || "未填写"}</p>
+          <p>联系邮箱：${item.email || "无"}</p>
+          <p>应付金额：HK$${item.price || "0"}</p>
+          <p>订单状态：${statusText}</p>
+          ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
+          ${item.status=="checking" || item.status=="unpaid"?`
+            <button class="btn-ok" onclick="flightPaid('${currentNo}')">确认收款</button>
+            <button class="btn-no" onclick="flightReject('${currentNo}')">驳回订单</button>
+          `:""}
+        </div>
+      `
+    })
+  } catch(e) {
+    console.error("加载机票失败：", e);
+  }
 }
+
 async function flightPaid(no){
+  if(!no) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/flight-set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"paid"})
   });
   alert("机票订单确认收款成功，刷新页面");location.reload();
 }
+
 async function flightReject(no){
+  if(!no) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/flight-set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"reject"})
