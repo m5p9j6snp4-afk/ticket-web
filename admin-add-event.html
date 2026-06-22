@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Clerk登录SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 <title>发布演唱会 | Re旅行商家后台</title>
 <style>
@@ -56,6 +57,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   <button class="btn-save" onclick="submitAdd()">保存发布</button>
 </div>
 
+<!-- 全站统一底部导航 -->
 <div class="bottom-tab">
   <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
   <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
@@ -69,14 +71,13 @@ const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
 let posterUrl = "";
-let adminPassword = "";
+// 🔑 自動綁定你 Worker 後端的真實密碼
+let adminPassword = "Rene 12345678"; 
 const fileInput = document.getElementById("imgFile");
 const preview = document.getElementById("imgPreview");
 const tip = document.getElementById("uploadTip");
 
-// 页面加载鉴权
 window.onload = async function(){
-  // 注入全套中文汉化映射
   await clerk.load({
     localization: {
       locale: "zh-CN",
@@ -93,7 +94,6 @@ window.onload = async function(){
   });
 
   const user = clerk.user;
-  // 未登录拦截并弹出登录框
   if(!user){
     alert("请先登录账号");
     clerk.openSignIn({
@@ -106,29 +106,17 @@ window.onload = async function(){
   const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
 
-  // 🛠️ 站长独立绿道校验（邮箱锁死）
-  if (email === "1477rene@gmail.com") {
-    adminPassword = meta.admin_password || "admin"; 
+  // 🛠️ 核心：同時支援 Clerk 的 {"role": "admin"} 標籤和你的綁定郵箱
+  if (meta.role === "admin" || email === "1477rene@gmail.com") {
     document.getElementById("formWrap").style.display = "block";
     document.getElementById("permWrap").style.display = "none";
-    console.log("🎉 发布页面：超级管理员通过邮箱直接验证通过！");
-    return;
-  }
-
-  // 普通用户的常规管理员检测逻辑
-  if(!meta.is_admin){
+    console.log("🎉 发布页面验证成功！");
+  } else {
     document.getElementById("permWrap").style.display = "block";
     document.getElementById("formWrap").style.display = "none";
-    return;
   }
-
-  // 兜底正常管理员放行
-  adminPassword = meta.admin_password;
-  document.getElementById("formWrap").style.display = "block";
-  document.getElementById("permWrap").style.display = "none";
 }
 
-// 海报上传逻辑（完全保留原有功能）
 fileInput.onchange = async function(e){
   const file = e.target.files[0];if(!file)return;
   tip.innerText = "图片上传中...";
@@ -142,19 +130,23 @@ fileInput.onchange = async function(e){
   }catch(err){tip.innerText = "上传失败，切换5G网络重试";}
 }
 
-// 提交发布，自动带入管理员密码，无需弹窗输入
 async function submitAdd(){
   const name = document.getElementById("eventName").value.trim();
   const date = document.getElementById("eventDate").value;
   const price = Number(document.getElementById("eventPrice").value);
   if(!name||!date||!price){alert("请完整填写全部演出信息");return;}
-  const res = await fetch(`${API_BASE}/api/admin/add-event?pwd=${adminPassword}`,{
+  
+  const res = await fetch(`${API_BASE}/api/admin/add-event?pwd=${encodeURIComponent(adminPassword)}`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({name,date,price,poster:posterUrl})
   });
   const data = await res.json();
-  if(data.success){alert("演唱会发布成功！刷新首页查看");location.reload();}
-  else alert(data.msg || "发布失败");
+  if(data.success){
+    alert("演唱会发布成功！刷新首页查看");
+    location.href = "/";
+  } else {
+    alert(data.msg || "发布失败");
+  }
 }
 </script>
 </body>
