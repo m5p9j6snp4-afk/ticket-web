@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>Re旅行 | 首頁</title>
+<title>Re旅行 | 演唱會預訂</title>
 <style>
-/* 樣式簡化以確保加載速度 */
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa;padding-bottom:80px}
-header{background:#1e293b;padding:24px 16px;color:#fff;border-bottom-left-radius:20px;border-bottom-right-radius:20px}
-.btn-login{background:#fff;color:#0f172a;border:none;padding:12px 24px;border-radius:20px;font-weight:bold;cursor:pointer}
-.container{padding:20px}
+    *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+    body{background:#f7f8fa;padding-bottom:100px}
+    header{background:#1e293b;padding:30px 20px;color:#fff;border-bottom-left-radius:25px;border-bottom-right-radius:25px}
+    .btn{background:#fff;color:#0f172a;border:none;padding:12px 25px;border-radius:20px;font-weight:bold;cursor:pointer;margin-top:10px}
+    .container{padding:20px}
+    .event-card{background:#fff;padding:15px;margin-bottom:15px;border-radius:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
 </style>
 </head>
 <body>
 
 <header>
-    <h2 id="welcomeGreeting">載入中...</h2>
-    <div id="authArea" style="margin-top:15px"></div>
+    <h2 id="welcomeGreeting">系統啟動中...</h2>
+    <div id="authArea"></div>
 </header>
 
-<div class="container" id="eventList">正在載入演唱會...</div>
+<div class="container" id="eventList">載入數據中...</div>
 
 <script>
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
 
-window.onload = async () => {
+async function init() {
     await clerk.load({ localization: { locale: "zh-HK" } });
     
     // 檢查登入狀態
@@ -36,21 +36,37 @@ window.onload = async () => {
         document.getElementById("welcomeGreeting").innerText = 
             (email === "1477rene@gmail.com") ? "下午好，管理員 Rene" : "歡迎回來";
         document.getElementById("authArea").innerHTML = 
-            `<button class="btn-login" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
+            `<button class="btn" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
     } else {
         document.getElementById("welcomeGreeting").innerText = "你好，歡迎來到 Re旅行";
-        // 核心改動：直接跳轉登入，不使用彈出視窗
+        // 使用 Clerk 標準 API 獲取跳轉網址，這比手動拼接字串安全且正確
+        const signInUrl = clerk.buildSignInUrl();
         document.getElementById("authArea").innerHTML = 
-            `<button class="btn-login" onclick="window.location.href='https://accounts.dev/sign-in?redirect_url=' + encodeURIComponent(window.location.href)">前往登入頁</button>`;
+            `<button class="btn" onclick="window.location.href='${signInUrl}'">前往登入</button>`;
     }
 
-    // 載入列表
-    fetch("https://hidden-mouse-2636.bmk4byvf9b.workers.dev/api/events")
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById("eventList").innerHTML = data.map(i => `<div>${i.name}</div>`).join('');
-        });
-};
+    // 載入演唱會列表 (加入錯誤重試)
+    fetchEvents();
+}
+
+async function fetchEvents(retryCount = 0) {
+    try {
+        const response = await fetch("https://hidden-mouse-2636.bmk4byvf9b.workers.dev/api/events");
+        if (!response.ok) throw new Error("API 錯誤");
+        const data = await response.json();
+        document.getElementById("eventList").innerHTML = data.map(i => 
+            `<div class="event-card"><h3>${i.name}</h3><p>票價 HK$ ${i.price}</p></div>`
+        ).join('');
+    } catch (e) {
+        if (retryCount < 2) {
+            setTimeout(() => fetchEvents(retryCount + 1), 1000);
+        } else {
+            document.getElementById("eventList").innerText = "暫時無法連接伺服器，請稍後再試。";
+        }
+    }
+}
+
+window.onload = init;
 </script>
 </body>
 </html>
