@@ -1,42 +1,28 @@
 <!DOCTYPE html>
-// 页面加载先校验登录状态
-async function checkLogin(){
-  const token = localStorage.getItem("userToken");
-  if(!token){
-    location.href="/login.html";
-    return false;
-  }
-  const res = await fetch(`${API_BASE}/api/user/info`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({token})
-  });
-  const data = await res.json();
-  if(data.code !== 200){
-    localStorage.clear();
-    location.href="/login.html";
-    return false;
-  }
-  return data.user;
-}
-// 页面初始化执行
-const loginUser = await checkLogin();
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>机票付款上传凭证 | 星耀售票</title>
+<!-- Clerk登录SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<title>机票付款上传凭证 | Re旅行</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa}
+body{background:#f7f8fa;padding-bottom:70px}
 nav{background:#0a0e17;padding:14px 16px}
 nav a{color:#fff;text-decoration:none}
 .container{max-width:520px;margin:30px auto;padding:0 14px;text-align:center}
 .qr-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:24px}
 .tip-red{color:#ef4444;margin:10px 0;font-size:14px}
-.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:36px 16px;margin:20px 0;color:#6366f1}
+.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:36px 16px;margin:20px 0;color:#6366f1;cursor:pointer}
 .preview{max-width:100%;max-height:220px;border-radius:10px;margin:10px 0;display:none}
 .tip-text{margin:8px 0;font-size:14px}
-.btn-sub{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px}
+.btn-sub{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;cursor:pointer}
+/* 底部导航统一样式 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
+.tab-cell.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
@@ -58,16 +44,41 @@ nav a{color:#fff;text-decoration:none}
 
   <button class="btn-sub" onclick="submitFlightPay()">提交凭证</button>
 </div>
+
+<!-- 全站统一可点击底部导航 -->
+<div class="bottom-tab">
+  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
+  <div class="tab-cell" onclick="location.href='/account.html'"><p>账户</p></div>
+</div>
+
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const IMGBB_KEY = "6d207e02198a847aa98d0a2a901485a5";
+const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
+const clerk = new Clerk(CLERK_PUB_KEY);
+
 const urlParams = new URLSearchParams(location.search);
 const orderNo = urlParams.get("orderNo");
-document.getElementById("orderNo").innerText = orderNo;
+const totalMoney = urlParams.get("total") || "0";
 let imgUrl = "";
 const fileInput = document.getElementById("fileInput");
 const previewImg = document.getElementById("previewImg");
 const tipText = document.getElementById("tipText");
+
+// 页面初始化：Clerk登录校验
+window.onload = async function(){
+  await clerk.load();
+  const user = clerk.user;
+  if(!user){
+    alert("请先登录账号再上传付款凭证");
+    location.href="/";
+    return;
+  }
+  document.getElementById("orderNo").innerText = orderNo;
+}
 
 fileInput.onchange = async function(e){
   const f = e.target.files[0];
@@ -86,6 +97,7 @@ fileInput.onchange = async function(e){
     tipText.innerText="上传失败，切换5G重试";
   }
 }
+
 async function submitFlightPay(){
   const res = await fetch(`${API_BASE}/api/upload-flight-pay`,{
     method:"POST",headers:{"Content-Type":"application/json"},
@@ -93,18 +105,20 @@ async function submitFlightPay(){
   });
   const data = await res.json();
   if(data.success){
+    // 提交凭证成功，更新用户累计消费（使用Clerk用户ID替代旧手机号）
+    const user = clerk.user;
+    await fetch(`${API_BASE}/api/user/addspend`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        clerkUserId: user.id,
+        money: totalMoney
+      })
+    });
     alert("提交成功，等待商家核验！");
     location.href="/mine.html";
   }
 }
-// 支付提交成功后执行
-await fetch(`${API_BASE}/api/user/addspend`,{
-  method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({
-    phone:loginUser.phone,
-    money:总价数字
-  })
-});
 </script>
 </body>
 </html>
