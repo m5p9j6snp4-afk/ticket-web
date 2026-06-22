@@ -2,67 +2,24 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>酒店列表 | Re旅行</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-        body{background:#f7f8fa;padding-bottom:100px}
-        .header{background:#000;color:#fff;padding:20px;position:sticky;top:0;display:flex;align-items:center}
-        .container{padding:15px}
-        .hotel-card{background:#fff;margin-bottom:15px;padding:20px;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-        .hotel-name{font-size:17px;font-weight:600;margin-bottom:8px}
-        .price{color:#ef4444;font-size:18px;font-weight:bold;margin-bottom:12px}
-        .btn-book{width:100%;padding:12px;background:#000;color:#fff;border-radius:10px;border:none;font-weight:bold;cursor:pointer}
-        /* 底部導航 */
-        .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
-        .tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
-        .tab-cell p{font-size:12px;color:#777;margin-top:4px;pointer-events:none}
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酒店列表</title>
+    <style>body{background:#f7f8fa;padding:20px}.card{background:#fff;padding:15px;border-radius:15px;margin-bottom:15px}</style>
 </head>
 <body>
-
-<div class="header">
-    <div onclick="history.back()" style="cursor:pointer">← 返回</div>
-    <h2 id="regionTitle" style="margin-left:15px">載入中...</h2>
-</div>
-
-<div class="container" id="list">
-    </div>
-
-<div class="bottom-tab">
-  <div class="tab-cell" onclick="location.href='index.html'"><p>首页</p></div>
-  <div class="tab-cell" onclick="location.href='message.html'"><p>讯息</p></div>
-  <div class="tab-cell" onclick="location.href='admin-add-event.html'"><p>发布</p></div>
-  <div class="tab-cell" onclick="location.href='mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell" onclick="location.href='account.html'"><p>账户</p></div>
-</div>
-
-<script>
-    const region = new URLSearchParams(window.location.search).get('r');
-    document.getElementById('regionTitle').innerText = region || "全球酒店";
-
-    // 全球酒店數據庫
-    const db = {
-        "香港": [{n:"香港半島酒店", p:5800}, {n:"香港朗廷酒店", p:2200}],
-        "日本": [{n:"東京安縵", p:8000}, {n:"京都四季酒店", p:6200}],
-        "英國": [{n:"碎片大廈香格里拉", p:7200}, {n:"倫敦麗茲酒店", p:6500}],
-        "法國": [{n:"巴黎麗茲酒店", p:9500}, {n:"巴黎香格里拉", p:8800}],
-        "美國": [{n:"紐約廣場飯店", p:6500}, {n:"洛杉磯比佛利威爾希爾", p:4200}]
-    };
-
-    // 如果找不到數據，則使用預設顯示
-    const hotels = db[region] || [
-        {n: region + " 萬豪酒店", p: 1500},
-        {n: region + " 希爾頓酒店", p: 1200}
-    ];
-
-    document.getElementById('list').innerHTML = hotels.map(h => `
-        <div class="hotel-card">
-            <div class="hotel-name">${h.n}</div>
-            <div class="price">¥${h.p} / 晚</div>
-            <button class="btn-book" onclick="location.href='hotel-detail.html?n=${encodeURIComponent(h.n)}&p=${h.p}'">立即預訂</button>
-        </div>
-    `).join('');
-</script>
+    <h2 id="title"></h2>
+    <div id="list"></div>
+    <script>
+        const region = new URLSearchParams(window.location.search).get('r');
+        document.getElementById('title').innerText = region + " 精選酒店";
+        const hotels = [{n: region + " 萬豪酒店", p: 1500}, {n: region + " 希爾頓酒店", p: 1200}];
+        document.getElementById('list').innerHTML = hotels.map(h => `
+            <div class="card">
+                <h3>${h.n}</h3>
+                <p>價格：¥${h.p} / 晚</p>
+                <button onclick="location.href='hotel-detail.html?n=${encodeURIComponent(h.n)}&p=${h.p}'">立即預訂</button>
+            </div>
+        `).join('');
+    </script>
 </body>
 </html>
