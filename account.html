@@ -66,20 +66,23 @@ body{background:#f7f8fa;padding-bottom:70px}
 </div>
 
 <script>
-// 使用 window 的 load 事件确保 Clerk SDK 脚本加载完毕
 window.addEventListener("load", async function() {
   try {
-    // 2. 标准 Vanilla JS 初始化与加载方式
-    await Clerk.load();
+    // 核心更改：显式在 JavaScript 初始化阶段注入中文语言配置，彻底干掉英文弹窗
+    await Clerk.load({
+      localization: {
+        locale: "zh-CN"
+      }
+    });
 
     const loadWrap = document.getElementById("loadWrap");
     const infoWrap = document.getElementById("infoWrap");
 
-    // 3. 检查登录状态
+    // 检查登录状态
     if (!Clerk.user) {
-      // 如果未登录，不踢回首页，而是直接在当前页面弹出 Clerk 官方的高级登录/注册弹窗（含 GitHub 登录）
+      // 未登录直接弹出中文登录弹窗
       Clerk.openSignIn({
-        afterSignInUrl: window.location.href, // 登录成功后刷新当前页
+        afterSignInUrl: window.location.href, 
         afterSignUpUrl: window.location.href
       });
       document.getElementById("loadingTitle").innerText = "请先登录账户";
@@ -102,10 +105,10 @@ window.addEventListener("load", async function() {
     document.getElementById("metaDetails").style.display = "block";
     infoWrap.style.display = "block";
 
-    // 4. 退出登录逻辑
+    // 退出登录逻辑
     document.getElementById("logoutBtn").onclick = async () => {
       await Clerk.signOut();
-      window.location.href = "/"; // 退出后跳转回首页
+      window.location.href = "/"; 
     }
 
   } catch (error) {
