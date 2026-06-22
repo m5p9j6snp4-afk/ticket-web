@@ -20,9 +20,8 @@ nav a{color:#fff;text-decoration:none}
 .badge-zone{display:inline-block;background:#e0e7ff;color:#4f46e5;padding:3px 8px;border-radius:6px;font-size:13px;font-weight:bold;margin-bottom:8px}
 .btn-ok{background:#16a34a;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
 .btn-no{background:#ef4444;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
-.btn-relogin{background:#4f46e5;color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500}
+.btn-relogin{background:#4f46e5;color:#fff;border:none;padding:12px 24px;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 4px 10px rgba(79,70,229,0.3)}
 h3{margin-top:40px;margin-bottom:16px;color:#222}
-/* 底部导航统一样式 */
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
 .tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
@@ -32,21 +31,20 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
 <body>
 <nav>
   <a href="/">← 返回首页</a>
-  <span class="welcome-msg" id="adminGreeting">正在验证管理员身份...</span>
+  <span class="welcome-msg" id="adminGreeting">正在验证身份...</span>
 </nav>
 
 <div class="container" id="noPermWrap" style="display:none">
   <div class="no-perm-box">
-    <h2 id="errTitle">无管理员访问权限</h2>
-    <p id="errDesc">当前账号非后台管理员，无法查看订单管理</p>
-    <button class="btn-relogin" id="adminLoginTrigger">重新登录管理账号</button>
+    <h2 id="errTitle">未偵測到管理員登入</h2>
+    <p id="errDesc">請點擊下方按鈕重新完成管理員帳號驗證</p>
+    <button class="btn-relogin" id="adminLoginTrigger">立即驗證管理員身份</button>
   </div>
 </div>
 
 <div class="container" id="adminWrap" style="display:none">
   <h2>演唱会订单管理列表</h2>
   <div id="orderList"></div>
-
   <h3>机票订单管理列表</h3>
   <div id="flightOrderList"></div>
 </div>
@@ -72,47 +70,43 @@ function getGreetingWord() {
   return "晚上好";
 }
 
-window.onload = async function(){
-  // 初始化 Clerk
-  await clerk.load({ localization: { locale: "zh-CN" } });
-
-  // 绑定未登录时的手动登录按钮
-  document.getElementById("adminLoginTrigger").addEventListener("click", () => {
-    clerk.openSignIn({ afterSignInUrl: window.location.href });
-  });
-
-  const user = clerk.user;
-  
-  // 1. 如果根本没有读取到登录用户
+function checkUserStatus(user) {
   if(!user){
-    document.getElementById("adminGreeting").innerText = "未登录";
-    document.getElementById("errTitle").innerText = "请先登录账号";
-    document.getElementById("errDesc").innerText = "您需要登录管理员账号才能查看此页面";
+    document.getElementById("adminGreeting").innerText = "未登入";
     document.getElementById("noPermWrap").style.display = "block";
     document.getElementById("adminWrap").style.display = "none";
     return;
   }
-
   const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
 
-  // 2. 精确匹配管理员账号
   if (meta.role === "admin" || email === "1477rene@gmail.com") {
     document.getElementById("adminWrap").style.display = "block";
     document.getElementById("noPermWrap").style.display = "none";
-    
-    // 渲染专属时间问候语
     document.getElementById("adminGreeting").innerText = `${getGreetingWord()}，管理员 Rene`;
-    
     renderLoader();
   } else {
-    // 3. 登录了，但不是管理员
     document.getElementById("adminGreeting").innerText = "权限不足";
     document.getElementById("errTitle").innerText = "无管理员访问权限";
     document.getElementById("errDesc").innerText = `当前登录账号 (${email}) 非后台管理员`;
     document.getElementById("noPermWrap").style.display = "block";
     document.getElementById("adminWrap").style.display = "none";
   }
+}
+
+window.onload = async function(){
+  await clerk.load({ localization: { locale: "zh-CN" } });
+
+  // 監聽狀態改變
+  clerk.addListener(({ user }) => {
+    checkUserStatus(user);
+  });
+
+  document.getElementById("adminLoginTrigger").addEventListener("click", () => {
+    clerk.openSignIn({ afterSignInUrl: window.location.href });
+  });
+
+  checkUserStatus(clerk.user);
 }
 
 async function renderLoader() {
@@ -122,7 +116,7 @@ async function renderLoader() {
     renderOrders(data);
     loadFlightOrders();
   } catch(err) {
-    console.error("同步数据库失败：", err);
+    console.error(err);
   }
 }
 
@@ -132,7 +126,6 @@ function renderOrders(list){
   list.forEach(item=>{
     const currentNo = item.order_no || item.orderNo || "";
     const seatZone = item.zone || item.seat_zone || "未指定区域";
-    
     wrap.innerHTML += `
       <div class="order-card">
         <h4>${item.event_name || "未知演出"}</h4>
@@ -141,7 +134,6 @@ function renderOrders(list){
         <p>价格金额：HK$ ${item.price || "0"}</p>
         <p>购票人：${item.username || "游客"} ${item.contact || ""}</p>
         <p>当前状态：${item.status || "未知"}</p>
-        <p>邮箱：${item.email || "未填写"}</p>
         ${item.pay_img ? `<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a></p>`:"<p>未上传凭证</p>"}
         ${item.status=="checking" || item.status=="unpaid" ? `
           <button class="btn-ok" onclick="setPaid('${currentNo}')">确认收款</button>
@@ -153,21 +145,19 @@ function renderOrders(list){
 }
 
 async function setPaid(orderNo){
-  if(!orderNo) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"paid"})
   });
-  alert("操作成功，刷新页面");location.reload();
+  alert("操作成功");location.reload();
 }
 
 async function setReject(orderNo){
-  if(!orderNo) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"reject"})
   });
-  alert("已驳回订单，刷新页面");location.reload();
+  alert("已驳回订单");location.reload();
 }
 
 async function loadFlightOrders(){
@@ -183,40 +173,32 @@ async function loadFlightOrders(){
         <div class="order-card">
           <h4>${item.airline || "未命名航班"} ${item.route || ""}</h4>
           <p>机票订单号：${currentNo}</p>
-          <p>起降时间：${item.flight_time || "未排定"}</p>
-          <p>乘机人：${item.passenger_names || "未填写"}</p>
-          <p>联系邮箱：${item.email || "无"}</p>
-          <p>应付金额：HK$${item.price || "0"}</p>
           <p>订单状态：${statusText}</p>
           ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
-          ${item.status=="checking" || item.status=="unpaid"?`
+          ${item.status=="checking" || item.status=="unpaid"? `
             <button class="btn-ok" onclick="flightPaid('${currentNo}')">确认收款</button>
             <button class="btn-no" onclick="flightReject('${currentNo}')">驳回订单</button>
           `:""}
         </div>
       `;
     });
-  } catch(e) {
-    console.error("加载机票失败：", e);
-  }
+  } catch(e) {}
 }
 
 async function flightPaid(no){
-  if(!no) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/flight-set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"paid"})
   });
-  alert("机票订单确认收款成功，刷新页面");location.reload();
+  alert("机票訂單確認成功");location.reload();
 }
 
 async function flightReject(no){
-  if(!no) return alert("单号错误");
   await fetch(`${API_BASE}/api/admin/flight-set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"reject"})
   });
-  alert("机票订单已驳回，刷新页面");location.reload();
+  alert("機票訂單已駁回");location.reload();
 }
 </script>
 </body>
