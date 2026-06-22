@@ -109,16 +109,11 @@ const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 
 window.addEventListener("load", async function(){
   try {
-    // 1. 更正 Clerk 官方国际化標準配置字典（全文本覆盖）
     await Clerk.load({
       localization: {
         locale: "zh-CN",
-        signIn: {
-          start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" }
-        },
-        signUp: {
-          start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" }
-        },
+        signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" } },
+        signUp: { start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" } },
         socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
         dividerText: "或",
         formButtonPrimary: "继续",
@@ -140,28 +135,17 @@ window.addEventListener("load", async function(){
       memberBtn.innerText = "登录/注册";
       memberBtn.onclick = () => Clerk.openSignIn();
     } else {
-      // 2. 🔥 核心：前端自动化管理员后门
-      // 如果登录的邮箱是你的邮箱，且还不是 admin，直接在前端用代码赋予你 admin 权限！
       const email = user.emailAddresses[0]?.emailAddress;
-      let userLevel = user.publicMetadata?.member_level || "银级会员";
-      let userRole = user.publicMetadata?.role;
-
-      if (email === "1477rene@gmail.com" && userRole !== "admin") {
-        try {
-          await user.update({
-            publicMetadata: {
-              role: "admin",
-              member_level: "超级管理员"
-            }
-          });
-          userLevel = "超级管理员";
-          console.log("🎉 检测到站长身份，已自动在前端激活管理员(admin)权限！");
-        } catch(e) {
-          console.error("后门激活失败: ", e);
-        }
+      
+      // 🛠️ 终极本地硬编码鉴权方案 🛠️
+      // 不管 Clerk 数据库怎么写，只要前端检查到是你的邮箱，代码里直接强行赋予你管理员身份和本地全局变量
+      if (email === "1477rene@gmail.com") {
+        window.IS_ADMIN_USER = true; // 建立一个全局信任标记
+        memberBtn.innerText = "超级管理员";
+      } else {
+        memberBtn.innerText = user.publicMetadata?.member_level || "银级会员";
       }
 
-      memberBtn.innerText = userLevel;
       memberBtn.onclick = () => { location.href = "/account.html"; };
     }
   } catch (error) {
