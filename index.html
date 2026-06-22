@@ -3,208 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Clerk 登入SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>商家后台 | Re旅行订单管理</title>
+<title>Re旅行 | 演唱會與機票預訂首頁</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa;padding-bottom:70px}
-nav{background:#0a0e17;padding:14px 16px;display:flex;justify-content:between;align-items:center}
-nav a{color:#fff;text-decoration:none}
-.welcome-msg{color:#a5b4fc;font-size:14px;font-weight:500}
-.container{max-width:920px;margin:30px auto;padding:0 14px}
-.no-perm-box{max-width:420px;margin:60px auto;text-align:center}
-.no-perm-box h2{margin-bottom:20px;color:#ef4444}
-.order-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:16px}
-.order-card h4{font-size:17px;margin-bottom:8px;color:#111}
-.badge-zone{display:inline-block;background:#e0e7ff;color:#4f46e5;padding:3px 8px;border-radius:6px;font-size:13px;font-weight:bold;margin-bottom:8px}
-.btn-ok{background:#16a34a;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
-.btn-no{background:#ef4444;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
-h3{margin-top:40px;margin-bottom:16px;color:#222}
-/* 底部导航统一样式 */
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
-.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
-.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
-.tab-cell.active p{color:#111;font-weight:500}
+body{background:#f7f8fa;padding-bottom:80px;color:#333}
+header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;color:#fff;border-bottom-left-radius:20px;border-bottom-right-radius:20px}
+.user-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.user-info h2{font-size:20px;font-weight:600}
+.user-info p{font-size:13px;color:#94a3b8;margin-top:2px}
+.btn-login{background:#fff;color:#0f172a;border:none;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:500;cursor:pointer}
+/* 數據看板（一般用戶顯示，管理員 Rene 登入時會自動隱藏） */
+.dashboard-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:14px;padding:16px;display:flex;justify-content:space-between;margin-top:10px}
+.db-item text{display:block;font-size:12px;color:#94a3b8}
+.db-item number{display:block;font-size:18px;font-weight:bold;color:#fff;margin-top:4px}
+
+.container{max-width:620px;margin:24px auto;padding:0 14px}
+.section-title{font-size:18px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.btn-admin-gate{font-size:13px;color:#4f46e5;text-decoration:none;font-weight:500}
+
+/* 演唱會卡片樣式 */
+.event-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.03);margin-bottom:20px;display:flex;flex-direction:column}
+.event-banner{width:100%;height:200px;object-fit:cover;background:#e2e8f0}
+.event-body{padding:16px}
+.event-name{font-size:17px;font-weight:600;color:#1e293b;margin-bottom:6px}
+.event-date{font-size:13px;color:#64748b;margin-bottom:12px}
+/* 票價分區樣式 */
+.zones-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.zone-tag{background:#f1f5f9;color:#334155;font-size:12px;padding:4px 8px;border-radius:6px;font-weight:500}
+.event-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;padding-top:12px}
+.price-from{font-size:13px;color:#64748b}
+.price-from span{font-size:20px;font-weight:bold;color:#ef4444}
+.btn-book{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer}
+
+/* 全站統一底部導航 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e2e8f0;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#64748b;margin-top:4px;pointer-events:none}
+.tab-cell.active p{color:#0f172a;font-weight:600}
 </style>
 </head>
 <body>
-<nav>
-  <a href="/">← 返回首页</a>
-  <!-- 🌟 智能问候语显示锚点 -->
-  <span class="welcome-msg" id="adminGreeting"></span>
-</nav>
 
-<div class="container" id="noPermWrap" style="display:none">
-  <div class="no-perm-box">
-    <h2>无管理员访问权限</h2>
-    <p>当前账号非后台管理员，无法查看订单管理</p>
+<header>
+  <div class="user-bar">
+    <div class="user-info">
+      <h2 id="welcomeGreeting">你好，歡迎來到 Re旅行</h2>
+      <p id="userEmailSub">登入解鎖個人专享行程</p>
+    </div>
+    <div id="authBtnWrap">
+      <button class="btn-login" onclick="clerk.openSignIn()">登入 / 註冊</button>
+    </div>
+  </div>
+
+  <div class="dashboard-card" id="userSpendDashboard">
+    <div class="db-item">
+      <text>累計消費額</text>
+      <number>HK$ 0.00</number>
+    </div>
+    <div class="db-item">
+      <text>進行中行程</text>
+      <number>0 個</number>
+    </div>
+    <div class="db-item">
+      <text>會員積分</text>
+      <number>0 P</number>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="section-title">
+    <span>熱門演唱會預訂</span>
+    <a href="/admin.html" class="btn-admin-gate" id="adminGateBtn" style="display:none">進入商家後台 →</a>
+  </div>
+
+  <div id="eventListContainer">
+    <p style="text-align:center;color:#94a3b8;padding:40px 0;">正在載入最新演唱會...</p>
   </div>
 </div>
-<div class="container" id="adminWrap" style="display:none">
-  <h2>演唱会订单管理列表</h2>
-  <div id="orderList"></div>
 
-  <h3>机票订单管理列表</h3>
-  <div id="flightOrderList"></div>
-</div>
-
-<!-- 全站统一底部导航 -->
 <div class="bottom-tab">
-  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
-  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
-  <div class="tab-cell active" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell active"><p>首頁</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>訊息</p></div>
+  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>發布</p></div>
   <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell" onclick="location.href='/account.html'"><p>账户</p></div>
+  <div class="tab-cell" onclick="location.href='/account.html'"><p>帳戶</p></div>
 </div>
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
-let adminPwd = "Rene 12345678"; 
 
-// 🌟 根据时间生成问候语
-function getGreetingWord() {
+// 🌟 根據當前時間智能判定問候語
+function getTimeGreeting() {
   const hr = new Date().getHours();
   if (hr >= 5 && hr < 12) return "早上好";
   if (hr >= 12 && hr < 18) return "下午好";
   return "晚上好";
 }
 
-window.onload = async function(){
-  await clerk.load({
-    localization: { locale: "zh-CN", signIn: { start: { title: "登录 Re旅行" } } }
-  });
-
+window.onload = async function() {
+  await clerk.load({ localization: { locale: "zh-CN" } });
+  
   const user = clerk.user;
-  if(!user){
-    alert("请先登录账号");
-    clerk.openSignIn({ afterSignInUrl: window.location.href });
-    return;
+  if (user) {
+    const email = user.emailAddresses[0]?.emailAddress;
+    const meta = user.publicMetadata || {};
+    
+    // 登入後更新按鈕為「登出」
+    document.getElementById("authBtnWrap").innerHTML = `<button class="btn-login" onclick="clerk.signOut()">登出</button>`;
+    document.getElementById("userEmailSub").innerText = email;
+
+    // 🛠️ 核心管理員 Rene 判斷
+    if (email === "1477rene@gmail.com" || meta.role === "admin") {
+      // 1. 顯示精準時間問候語，不透露任何一般消費數據
+      document.getElementById("welcomeGreeting").innerText = `${getTimeGreeting()}，管理員 Rene`;
+      
+      // 2. 🌟 隱藏消費金額看板
+      document.getElementById("userSpendDashboard").style.display = "none";
+      
+      // 3. 顯示後台快捷入口
+      document.getElementById("adminGateBtn").style.display = "block";
+      console.log("🚀 Rene 管理員特權主頁界面已渲染！");
+    } else {
+      // 普通用戶登入
+      document.getElementById("welcomeGreeting").innerText = `${getTimeGreeting()}，${user.firstName || '旅客'}`;
+    }
   }
 
-  const email = user.emailAddresses[0]?.emailAddress;
-  const meta = user.publicMetadata || {};
-
-  if (meta.role === "admin" || email === "1477rene@gmail.com") {
-    document.getElementById("adminWrap").style.display = "block";
-    document.getElementById("noPermWrap").style.display = "none";
-    
-    // 🌟 如果是管理员Rene登录，渲染专属问候语，不再显示任何普通消费金额
-    document.getElementById("adminGreeting").innerText = `${getGreetingWord()}，管理员 Rene`;
-    
-    renderLoader();
-  } else {
-    document.getElementById("noPermWrap").style.display = "block";
-    document.getElementById("adminWrap").style.display = "none";
-  }
+  // 加載演唱會數據
+  loadEvents();
 }
 
-async function renderLoader() {
+// 動態加載後端 Worker 數據並顯示
+async function loadEvents() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/list?pwd=${encodeURIComponent(adminPwd)}`);
-    const data = await res.json();
-    renderOrders(data);
-    loadFlightOrders();
-  } catch(err) {
-    console.error("同步数据库失败：", err);
-  }
-}
+    const res = await fetch(`${API_BASE}/api/events`);
+    const events = await res.json();
+    const container = document.getElementById("eventListContainer");
+    container.innerHTML = "";
 
-// 🌟 渲染演唱会订单：增加了区域/位置的具体显示
-function renderOrders(list){
-  const wrap = document.getElementById("orderList"); wrap.innerHTML="";
-  if(!list || list.length===0){wrap.innerHTML="<p>暂无演唱会订单</p>";return;}
-  list.forEach(item=>{
-    const currentNo = item.order_no || item.orderNo || "";
-    // 读取具体的位置信息（兼容后端可能返回的 zone 字段）
-    const seatZone = item.zone || item.seat_zone || "未指定区域";
-    
-    wrap.innerHTML += `
-      <div class="order-card">
-        <h4>${item.event_name || "未知演出"}</h4>
-        <div class="badge-zone">已选位置/区域: ${seatZone}</div>
-        <p>订单号：${currentNo}</p>
-        <p>价格金额：HK$ ${item.price || "0"}</p>
-        <p>购票人：${item.username || "游客"} ${item.contact || ""}</p>
-        <p>当前状态：${item.status || "未知"}</p>
-        <p>邮箱：${item.email || "未填写"}</p>
-        ${item.pay_img ? `<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a></p>`:"<p>未上传凭证</p>"}
-        ${item.status=="checking" || item.status=="unpaid" ? `
-          <button class="btn-ok" onclick="setPaid('${currentNo}')">确认收款</button>
-          <button class="btn-no" onclick="setReject('${currentNo}')">驳回订单</button>
-        `:""}
-      </div>
-    `;
-  });
-}
+    if (!events || events.length === 0) {
+      container.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:40px 0;">暫無發布的演唱會資訊</p>`;
+      return;
+    }
 
-async function setPaid(orderNo){
-  if(!orderNo) return alert("单号错误");
-  await fetch(`${API_BASE}/api/admin/set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo,status:"paid"})
-  });
-  alert("操作成功，刷新页面");location.reload();
-}
+    events.forEach(item => {
+      // 解析多分區票價
+      let zonesHtml = "";
+      if (item.zones && Array.isArray(item.zones)) {
+        item.zones.forEach(z => {
+          zonesHtml += `<span class="zone-tag">${z.name} (HK$${z.price})</span>`;
+        });
+      } else {
+        zonesHtml = `<span class="zone-tag">常規單一分區</span>`;
+      }
 
-async function setReject(orderNo){
-  if(!orderNo) return alert("单号错误");
-  await fetch(`${API_BASE}/api/admin/set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo,status:"reject"})
-  });
-  alert("已驳回订单，刷新页面");location.reload();
-}
+      container.innerHTML += `
+        <div class="event-card">
+          ${item.poster ? `<img class="event-banner" src="${item.poster}" alt="海報">` : `<div class="event-banner" style="display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;">暫無海報</div>`}
+          <div class="event-body">
+            <div class="event-name">${item.name || "未命名演出"}</div>
+            <div class="event-date">演出日期：${item.date || "未定"}</div>
+            
+            <div class="zones-wrap">
+              ${zonesHtml}
+            </div>
 
-async function loadFlightOrders(){
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${encodeURIComponent(adminPwd)}`);
-    const list = await res.json();
-    const wrap = document.getElementById("flightOrderList"); wrap.innerHTML="";
-    if(!list || list.length===0){wrap.innerHTML="<p>暂无机票订单</p>";return;}
-    list.forEach(item=>{
-      let statusText = item.status=="unpaid"?"未上传凭证":item.status=="checking"?"待核验":item.status=="paid"?"已确认":"已驳回";
-      const currentNo = item.order_no || item.orderNo || "";
-      wrap.innerHTML += `
-        <div class="order-card">
-          <h4>${item.airline || "未命名航班"} ${item.route || ""}</h4>
-          <p>机票订单号：${currentNo}</p>
-          <p>起降时间：${item.flight_time || "未排定"}</p>
-          <p>乘机人：${item.passenger_names || "未填写"}</p>
-          <p>联系邮箱：${item.email || "无"}</p>
-          <p>应付金额：HK$${item.price || "0"}</p>
-          <p>订单状态：${statusText}</p>
-          ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
-          ${item.status=="checking" || item.status=="unpaid"?`
-            <button class="btn-ok" onclick="flightPaid('${currentNo}')">确认收款</button>
-            <button class="btn-no" onclick="flightReject('${currentNo}')">驳回订单</button>
-          `:""}
+            <div class="event-footer">
+              <div class="price-from">票價 <span>HK$ ${item.price || "780"}</span> 起</div>
+              <button class="btn-book" onclick="location.href='/book.html?id=${item.id}'">立即預訂</button>
+            </div>
+          </div>
         </div>
       `;
     });
-  } catch(e) {
-    console.error("加载机票失败：", e);
+  } catch (err) {
+    console.error("載入演唱會失敗：", err);
+    document.getElementById("eventListContainer").innerHTML = `<p style="text-align:center;color:#ef4444;padding:40px 0;">數據載入失敗，請檢查網路連線</p>`;
   }
-}
-
-async function flightPaid(no){
-  if(!no) return alert("单号错误");
-  await fetch(`${API_BASE}/api/admin/flight-set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"paid"})
-  });
-  alert("机票订单确认收款成功，刷新页面");location.reload();
-}
-
-async function flightReject(no){
-  if(!no) return alert("单号错误");
-  await fetch(`${API_BASE}/api/admin/flight-set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"reject"})
-  });
-  alert("机票订单已驳回，刷新页面");location.reload();
 }
 </script>
 </body>
