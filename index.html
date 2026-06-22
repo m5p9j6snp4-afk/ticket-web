@@ -2,189 +2,105 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Re旅行 | 演唱会&机票预订</title>
-<script 
-  async 
-  crossorigin="anonymous" 
-  data-clerk-publishable-key="pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ" 
-  src="https://top-ant-1.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js" 
-  type="text/javascript">
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<title>Re旅行 | 首页</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,system-ui,sans-serif}
-body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
-.header-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#121212}
-.logo-text{color:#fff;font-size:18px;font-weight:500}
-.member-tag{padding:5px 12px;border-radius:30px;background:#2a2a2a;color:#fff;font-size:13px;border:0;cursor:pointer}
-.section-wrap{padding:16px 20px}
-.title-sm{font-size:14px;color:#6e6e73;margin-bottom:12px}
-.cat-row-1{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.cat-item{background:#fff;padding:18px 6px;border-radius:12px;text-align:center;cursor:pointer}
-.cat-item p{font-size:13px;margin-top:4px}
-.cat-row-2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-.more-container{margin:0 20px 16px;background:#fff;border-radius:12px;padding:16px;display:none}
-.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.more-item{text-align:center;font-size:13px;padding:6px}
-.search-bar{margin:0 20px 24px}
-.search-input{width:100%;padding:14px 16px;border-radius:10px;border:0;background:#fff;font-size:14px}
-.slider-box{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
-.slider-box::-webkit-scrollbar{display:none}
-.slide-card{min-width:220px;background:#fff;border-radius:12px;padding:16px;font-size:14px}
-.event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
-.event-card{background:#fff;border-radius:14px;overflow:hidden}
-.event-img{width:100%;height:320px;object-fit:cover}
-.event-info{padding:16px}
-.event-name{font-size:15px;font-weight:500;margin-bottom:6px}
-.event-price{color:#ff3b30;font-weight:500;margin:10px 0}
-.btn-buy{width:100%;border:0;background:#121212;color:#fff;padding:11px;border-radius:10px;font-size:14px;cursor:pointer}
-.empty-text{text-align:center;padding:60px 0;color:#86868b}
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e5e5e7;z-index:999}
-.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
-.tab-cell p{font-size:12px;color:#86868b;margin-top:3px;pointer-events:none}
-.tab-cell.active p{color:#121212;font-weight:500}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#f7f8fa;padding-bottom:90px}
+header{background:#000;color:#fff;padding:30px 20px;display:flex;justify-content:space-between;align-items:flex-start}
+.header-left h1{font-size:26px;font-weight:600}
+.admin-tag{background:#333;padding:8px 14px;border-radius:20px;font-size:14px}
+.container{padding:20px}
+/* 第一行功能网格 */
+.grid-row1{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+/* 第二行功能网格 */
+.grid-row2{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+/* 更多板块容器 */
+.more-wrap{background:#fff;border-radius:16px;padding:20px;margin-bottom:24px}
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+/* 优惠板块 */
+.discount-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 30px}
+/* 通用功能按钮 */
+.func-btn{background:#fff;border-radius:14px;padding:20px 8px;text-align:center;cursor:pointer}
+.func-btn p{font-size:15px;color:#111}
+.search-box{width:100%;background:#fff;border-radius:14px;padding:16px 18px;border:none;font-size:15px;margin-bottom:30px}
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#777;margin-top:4px;pointer-events:none}
+.tab-cell.active p{color:#000;font-weight:600}
 </style>
 </head>
 <body>
-<div class="header-top">
-  <div class="logo-text">Re旅行</div>
-  <button class="member-tag" id="memberBtn">加载中...</button>
+<header>
+    <div class="header-left">
+        <h1>Re旅行</h1>
+    </div>
+    <div class="admin-tag">超级管理员</div>
+</header>
+
+<div class="container">
+    <!-- 第一排4个按钮 -->
+    <div class="grid-row1">
+        <div class="func-btn" onclick="location.href='hotel.html'">
+            <p>住宿</p>
+        </div>
+        <div class="func-btn" onclick="location.href='flight.html'">
+            <p>机票</p>
+        </div>
+        <div class="func-btn" onclick="location.href='flight-hotel.html'">
+            <p>机票+酒店</p>
+        </div>
+        <div class="func-btn" onclick="location.href='train.html'">
+            <p>高铁/火车</p>
+        </div>
+    </div>
+
+    <!-- 第二排4个按钮 -->
+    <div class="grid-row2">
+        <div class="func-btn" onclick="location.href='homestay.html'">
+            <p>民宿</p>
+        </div>
+        <div class="func-btn" onclick="location.href='buy.html'">
+            <p>演唱会门票</p>
+        </div>
+        <div class="func-btn" onclick="location.href='car-rent.html'">
+            <p>租车接送</p>
+        </div>
+        <div class="func-btn" onclick="location.href='more.html'">
+            <p>更多</p>
+        </div>
+    </div>
+
+    <!-- 搜索框 -->
+    <input class="search-box" placeholder="搜索目的地、航班、演唱会">
+
+    <!-- 限时优惠 -->
+    <h3 style="color:#666;margin-bottom:10px">限时优惠</h3>
+    <div class="discount-row">
+        <div class="func-btn" onclick="location.href='discount-concert.html'">演唱会折扣</div>
+        <div class="func-btn" onclick="location.href='discount-flight.html'">机票满减</div>
+    </div>
+
+    <!-- 热门演唱会区域 -->
+    <h3 style="color:#666;margin-bottom:10px">热门演唱会</h3>
+    <div style="background:#fff;height:120px;border-radius:14px"></div>
 </div>
 
-<div class="section-wrap">
-  <div class="cat-row-1">
-    <div class="cat-item" onclick="location.href='/hotel.html'"><p>住宿</p></div>
-    <div class="cat-item" onclick="location.href='/flight.html'"><p>机票</p></div>
-    <div class="cat-item"><p>机票+酒店</p></div>
-    <div class="cat-item"><p>高铁/火车</p></div>
-  </div>
-  <div class="cat-row-2">
-    <div class="cat-item"><p>民宿</p></div>
-    <div class="cat-item"><p>演唱会门票</p></div>
-    <div class="cat-item"><p>租车接送</p></div>
-    <div class="cat-item" onclick="toggleMore()"><p>更多</p></div>
-  </div>
-</div>
-
-<div class="more-container" id="morePanel">
-  <div class="more-grid">
-    <div class="more-item">邮轮</div>
-    <div class="more-item">礼品卡</div>
-    <div class="more-item">旅游保险</div>
-    <div class="more-item">船票</div>
-    <div class="more-item">eSIM</div>
-    <div class="more-item">合作伙伴</div>
-    <div class="more-item">关于Re旅行</div>
-  </div>
-</div>
-
-<div class="search-bar">
-  <input class="search-input" placeholder="搜索目的地、航班、演唱会">
-</div>
-
-<div class="section-wrap">
-  <div class="title-sm">限时优惠</div>
-  <div class="slider-box">
-    <div class="slide-card">演唱会折扣</div>
-    <div class="slide-card">机票满减</div>
-    <div class="slide-card">旅行套餐</div>
-  </div>
-</div>
-
-<div class="section-wrap">
-  <div class="title-sm">热门演唱会</div>
-  <div class="event-grid" id="eventList"></div>
-</div>
-
+<!-- 底部导航 -->
 <div class="bottom-tab">
-  <div class="tab-cell active" onclick="location.href='/'"><p>首页</p></div>
-  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
-  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
-  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell" onclick="goAccount()"><p>账户</p></div>
+  <div class="tab-cell active" onclick="location.href='index.html'"><p>首页</p></div>
+  <div class="tab-cell" onclick="location.href='message.html'"><p>讯息</p></div>
+  <div class="tab-cell" onclick="location.href='admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='mine.html'"><p>我的行程</p></div>
+  <div class="tab-cell" onclick="location.href='account.html'"><p>账户</p></div>
 </div>
 
 <script>
-const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-
-window.addEventListener("load", async function(){
-  try {
-    await Clerk.load({
-      localization: {
-        locale: "zh-CN",
-        signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" } },
-        signUp: { start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" } },
-        socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
-        dividerText: "或",
-        formButtonPrimary: "继续",
-        formFieldLabel__firstName: "名",
-        formFieldLabel__lastName: "姓",
-        formFieldLabel__emailAddress: "电子邮箱",
-        formFieldLabel__password: "密码",
-        formFieldPlaceholder__firstName: "First name",
-        formFieldPlaceholder__lastName: "Last name",
-        formFieldInputPlaceholder__emailAddress: "Enter your email address",
-        formFieldInputPlaceholder__password: "Enter your password"
-      }
-    });
-    
-    const memberBtn = document.getElementById("memberBtn");
-    const user = Clerk.user;
-
-    if (!user) {
-      memberBtn.innerText = "登录/注册";
-      memberBtn.onclick = () => Clerk.openSignIn();
-    } else {
-      const email = user.emailAddresses[0]?.emailAddress;
-      
-      // 🛠️ 终极本地硬编码鉴权方案 🛠️
-      // 不管 Clerk 数据库怎么写，只要前端检查到是你的邮箱，代码里直接强行赋予你管理员身份和本地全局变量
-      if (email === "1477rene@gmail.com") {
-        window.IS_ADMIN_USER = true; // 建立一个全局信任标记
-        memberBtn.innerText = "超级管理员";
-      } else {
-        memberBtn.innerText = user.publicMetadata?.member_level || "银级会员";
-      }
-
-      memberBtn.onclick = () => { location.href = "/account.html"; };
-    }
-  } catch (error) {
-    console.error("Clerk 初始化失败:", error);
-    document.getElementById("memberBtn").innerText = "账户";
-  }
-  loadEvents();
-});
-
-function goAccount(){ location.href = "/account.html"; }
-
-async function loadEvents(){
-  const res = await fetch(`${API_BASE}/api/events`);
-  const list = await res.json();
-  const wrap = document.getElementById("eventList");
-  if(list.length===0){
-    wrap.innerHTML = `<div class="empty-text">暂无演出</div>`;
-    return;
-  }
-  list.forEach(item=>{
-    const img = item.poster || "https://telegra.ph/file/0442023f809d443489830.jpg";
-    wrap.innerHTML += `
-      <div class="event-card">
-        <img class="event-img" src="${img}">
-        <div class="event-info">
-          <div class="event-name">${item.name}</div>
-          <p>${item.date}</p>
-          <div class="event-price">HK$${item.price}起</div>
-          <button class="btn-buy" onclick="goSeat(${item.id})">立即购票</button>
-        </div>
-      </div>
-    `
-  })
-}
-
-function goSeat(id){ location.href=`/seat.html?id=${id}`; }
-function toggleMore(){
-  const panel = document.getElementById("morePanel");
-  panel.style.display = panel.style.display === "block" ? "none" : "block";
+const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
+const clerk = new Clerk(CLERK_PUB_KEY);
+window.onload = async () => {
+    await clerk.load({ localization: { locale: "zh-HK" } });
 }
 </script>
 </body>
