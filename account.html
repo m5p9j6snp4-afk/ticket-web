@@ -36,7 +36,7 @@ body{background:#f7f8fa;padding-bottom:70px}
 <div class="load-box" id="loadWrap">
   <h3 id="loadingTitle">加载中...</h3>
   <div id="metaDetails" style="display:none">
-    <p>会员等级：<span id="levelText"></span></p>
+    <p>账户身份：<span id="levelText"></span></p>
     <p>累计消费美金：$<span id="spendText"></span></p>
   </div>
 </div>
@@ -77,7 +77,7 @@ window.addEventListener("load", async function() {
 
     // 3. 检查登录状态
     if (!Clerk.user) {
-      // 如果未登录，不踢回首页，而是直接在当前页面弹出 Clerk 官方的高级登录/注册弹窗（含 GitHub 登录）
+      // 如果未登录，弹出登录弹窗
       Clerk.openSignIn({
         afterSignInUrl: window.location.href, // 登录成功后刷新当前页
         afterSignUpUrl: window.location.href
@@ -86,19 +86,26 @@ window.addEventListener("load", async function() {
       return;
     }
 
-    // 已登录：读取并填充用户数据
+    // 已登录：读取用户数据
     const user = Clerk.user;
-    const level = user.publicMetadata?.member_level || "银级会员";
+    const userEmail = user.emailAddresses[0]?.emailAddress || "未填写";
     const spend = user.publicMetadata?.total_spend || 0;
-    const email = user.emailAddresses[0]?.emailAddress || "未填写";
+
+    // 判断管理员/普通用户
+    let userRole;
+    if (userEmail === "1477rene@gmail.com") {
+      userRole = "超级管理员";
+    } else {
+      userRole = "普通用户";
+    }
 
     // 更新 DOM 渲染
     document.getElementById("loadingTitle").innerText = "欢迎回来！";
-    document.getElementById("levelText").innerText = level;
+    document.getElementById("levelText").innerText = userRole;
     document.getElementById("spendText").innerText = spend;
-    document.getElementById("userEmail").innerText = email;
+    document.getElementById("userEmail").innerText = userEmail;
     
-    // 显示对应的资料区域
+    // 显示资料区域
     document.getElementById("metaDetails").style.display = "block";
     infoWrap.style.display = "block";
 
