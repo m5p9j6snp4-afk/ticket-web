@@ -1,13 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
-<head>
-    <meta charset="UTF-8">
-    <title>確認預訂</title>
-    <style>body{padding:20px} .pay{width:100%;padding:15px;background:#000;color:#fff;border-radius:10px;border:none;margin-top:20px}</style>
-</head>
+<head><meta charset="UTF-8"><title>確認預訂</title></head>
 <body>
     <h2 id="name"></h2>
-    <button class="pay" onclick="pay()">確認支付</button>
+    <button onclick="pay()" style="padding:15px;width:100%">確認支付</button>
     <script>
         const params = new URLSearchParams(window.location.search);
         const name = params.get('n');
