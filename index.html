@@ -45,11 +45,11 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
 <header>
   <div class="user-bar">
     <div class="user-info">
-      <h2 id="welcomeGreeting">你好，歡迎來到 Re旅行</h2>
-      <p id="userEmailSub">登入解鎖個人专享行程</p>
+      <h2 id="welcomeGreeting">載入中...</h2>
+      <p id="userEmailSub">正在同步您的帳戶資料</p>
     </div>
     <div class="auth-box" id="authBtnWrap">
-      <button class="btn-login" id="clerkTriggerBtn">登入 / 註冊</button>
+      <button class="btn-login" onclick="clerk.openSignIn()">登入 / 註冊</button>
     </div>
   </div>
 
@@ -66,7 +66,7 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
     <a href="/admin.html" class="btn-admin-gate" id="adminGateBtn" style="display:none">進入商家後台 →</a>
   </div>
   <div id="eventListContainer">
-    <p style="text-align:center;color:#94a3b8;padding:40px 0;">正在載入...</p>
+    <p style="text-align:center;color:#94a3b8;padding:40px 0;">正在載入最新演唱會...</p>
   </div>
 </div>
 
@@ -79,78 +79,67 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
 </div>
 
 <script>
-const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
 
 function getTimeGreeting() {
   const hr = new Date().getHours();
-  if (hr >= 5 && hr < 12) return "早上好";
-  if (hr >= 12 && hr < 18) return "下午好";
-  return "晚上好";
+  return hr < 12 ? "早上好" : "下午好";
 }
 
-function updateUI(user) {
+async function renderUI() {
+  await clerk.load();
+  const user = clerk.user;
+  const greeting = document.getElementById("welcomeGreeting");
+  const sub = document.getElementById("userEmailSub");
+  const auth = document.getElementById("authBtnWrap");
+  const dash = document.getElementById("userSpendDashboard");
+  const admin = document.getElementById("adminGateBtn");
+
   if (user) {
     const email = user.emailAddresses[0]?.emailAddress;
-    const meta = user.publicMetadata || {};
+    greeting.innerText = `${getTimeGreeting()}，${email === "1477rene@gmail.com" ? "管理員 Rene" : (user.firstName || "旅客")}`;
+    sub.innerText = email;
+    auth.innerHTML = `<button class="btn-logout" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
     
-    document.getElementById("authBtnWrap").innerHTML = `<button class="btn-logout" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
-    document.getElementById("userEmailSub").innerText = email;
-
-    if (email === "1477rene@gmail.com" || meta.role === "admin") {
-      document.getElementById("welcomeGreeting").innerText = `${getTimeGreeting()}，管理員 Rene`;
-      document.getElementById("userSpendDashboard").style.display = "none";
-      document.getElementById("adminGateBtn").style.display = "block";
-    } else {
-      document.getElementById("welcomeGreeting").innerText = `${getTimeGreeting()}，${user.firstName || '旅客'}`;
+    if (email === "1477rene@gmail.com") {
+      dash.style.display = "none";
+      admin.style.display = "block";
     }
   } else {
-    document.getElementById("welcomeGreeting").innerText = "你好，歡迎來到 Re旅行";
-    document.getElementById("userSpendDashboard").style.display = "flex";
+    greeting.innerText = "你好，歡迎來到 Re旅行";
+    sub.innerText = "登入解鎖個人专享行程";
+    auth.innerHTML = `<button class="btn-login" onclick="clerk.openSignIn()">登入 / 註冊</button>`;
   }
 }
 
-window.onload = async function() {
+window.onload = async () => {
+  // 先載入 Clerk
   await clerk.load({ localization: { locale: "zh-CN" } });
   
-  // 初始化檢查
-  updateUI(clerk.user);
+  // 嘗試獲取狀態
+  renderUI();
+  
+  // 核心改動：為了防止手機 Safari 延遲，我們再重複偵測兩次
+  setTimeout(renderUI, 1000);
+  setTimeout(renderUI, 3000);
 
-  document.getElementById("clerkTriggerBtn").addEventListener("click", () => {
-    // 强制跳轉並帶有參數，防止快取
-    clerk.openSignIn({
-      afterSignInUrl: window.location.href + "?auth=done"
-    });
-  });
-
-  // 監聽 Clerk 狀態變化
-  clerk.addListener(({ user }) => {
-    updateUI(user);
-  });
-
-  loadEvents();
-}
-
-async function loadEvents() { /* 保持原來的 loadEvents 邏輯 */
-  try {
-    const res = await fetch(`${API_BASE}/api/events`);
-    const events = await res.json();
-    const container = document.getElementById("eventListContainer");
-    container.innerHTML = "";
-    if (!events || events.length === 0) { container.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:40px 0;">暫無發布的演唱會資訊</p>`; return; }
-    events.forEach(item => {
-      container.innerHTML += `
+  // 載入列表
+  fetch("https://hidden-mouse-2636.bmk4byvf9b.workers.dev/api/events")
+    .then(r => r.json())
+    .then(data => {
+      const container = document.getElementById("eventListContainer");
+      container.innerHTML = data.map(item => `
         <div class="event-card">
           <div class="event-body">
             <div class="event-name">${item.name}</div>
-            <div class="event-footer"><button class="btn-book" onclick="location.href='/book.html?id=${item.id}'">立即預訂</button></div>
+            <div class="event-footer">
+              <button class="btn-book" onclick="location.href='/book.html?id=${item.id}'">立即預訂</button>
+            </div>
           </div>
-        </div>
-      `;
+        </div>`).join('');
     });
-  } catch (err) {}
-}
+};
 </script>
 </body>
 </html>
