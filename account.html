@@ -3,84 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的账户 | Re旅行</title>
-<!-- Clerk 登录SDK -->
+<!-- Clerk SDK 每个页面必须引入 -->
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<title>账户 | Re旅行</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
-body{background:#f8f9fa;padding-bottom:70px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#f7f8fa;padding-bottom:70px}
 .back{padding:16px 20px}
-.back a{color:#111;text-decoration:none}
-.user-card{background:#121212;color:#fff;margin:0 20px;border-radius:16px;padding:24px}
-.level{font-size:16px;margin:8px 0;color:#d4af37}
-.spend{opacity:0.8;font-size:14px}
-.list{margin:20px}
-.item{background:#fff;padding:16px 20px;border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;cursor:pointer}
-.logout{margin:30px 20px}
-.logout button{width:100%;padding:14px;border:1px solid #f00;color:#f00;background:#fff;border-radius:12px;font-size:15px;cursor:pointer}
+.back a{text-decoration:none;color:#111;font-size:16px}
+.load-box{margin:20px;border-radius:16px;background:#111;color:#fff;padding:30px 20px}
+.load-box h3{font-size:24px;margin-bottom:12px}
+.load-box p{font-size:15px;color:#ccc;margin:6px 0}
+.item-box{background:#fff;margin:12px 20px;border-radius:12px;padding:18px;display:flex;justify-content:space-between;align-items:center}
+.item-box p:first-child{font-size:15px;color:#222}
+.item-box p:last-child{color:#888}
+.logout-btn{margin:30px 20px;padding:16px;width:calc(100% - 40px);border:2px solid #ff3b30;color:#ff3b30;background:#fff;border-radius:12px;font-size:16px}
+/* 底部导航统一 */
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
-.tab{flex:1;text-align:center;padding:10px 0;cursor:pointer}
-.tab p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
-.tab.active p{color:#111;font-weight:500}
+.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
+.tab-cell.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
 <div class="back"><a href="/">← 返回首页</a></div>
-<div class="user-card">
-  <h2 id="userName">加载中</h2>
-  <div class="level">会员等级：<span id="userLevel"></span></div>
-  <div class="spend">累计消费美金：$<span id="userSpend">0</span></div>
-</div>
-<div class="list">
-  <div class="item">邮箱 <span id="userEmail">未填写</span></div>
-  <div class="item" onclick="showChangePwd()">修改登录密码</div>
-  <div class="item" onclick="location.href='/mine.html'">我的全部行程订单</div>
-</div>
-<div class="logout"><button onclick="logout()">退出登录</button></div>
 
+<div class="load-box" id="loadWrap">
+  <h3>加载中</h3>
+  <p>会员等级：<span id="levelText"></span></p>
+  <p>累计消费美金：$<span id="spendText"></span></p>
+</div>
+
+<div id="infoWrap" style="display:none">
+  <div class="item-box">
+    <p>邮箱</p>
+    <p id="userEmail">未填写</p>
+  </div>
+  <div class="item-box">
+    <p>修改登录密码</p>
+    <p>点击跳转</p>
+  </div>
+  <div class="item-box">
+    <p>我的全部行程订单</p>
+    <p>点击查看</p>
+  </div>
+  <button class="logout-btn" id="logoutBtn">退出登录</button>
+</div>
+
+<!-- 底部导航 -->
 <div class="bottom-tab">
-  <div class="tab" onclick="location.href='/'"><p>首页</p></div>
-  <div class="tab" onclick="location.href='/message.html'"><p>讯息</p></div>
-  <div class="tab" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
-  <div class="tab" onclick="location.href='/mine.html'"><p>我的行程</p></div>
-  <div class="tab active"><p>账户</p></div>
+  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
+  <div class="tab-cell active"><p>账户</p></div>
 </div>
 
 <script>
-const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-const clerk = new Clerk(CLERK_PUB_KEY);
-let userData = null;
+let clerk;
 
 window.onload = async function(){
-  // 初始化 Clerk
+  clerk = new Clerk(CLERK_PUB_KEY);
   await clerk.load();
   const user = clerk.user;
-  // 未登录拦截，跳转首页弹出登录
+  const loadWrap = document.getElementById("loadWrap");
+  const infoWrap = document.getElementById("infoWrap");
+
+  // 未登录：直接跳转首页唤起登录
   if(!user){
     location.href="/";
     return;
   }
-  userData = user;
-  // 填充用户信息
-  document.getElementById("userName").innerText = user.username || user.emailAddresses[0]?.emailAddress;
-  document.getElementById("userEmail").innerText = user.emailAddresses[0]?.emailAddress || "未填写";
-  // 读取会员等级、累计消费（存在用户公开元数据）
-  const meta = user.publicMetadata || {};
-  document.getElementById("userLevel").innerText = meta.member_level || "银级会员";
-  document.getElementById("userSpend").innerText = meta.total_spend || "0";
-}
 
-// Clerk 原生退出登录
-async function logout(){
-  await clerk.signOut();
-  alert("已退出登录");
-  location.href="/";
-}
+  // 读取用户元数据
+  const level = user.publicMetadata?.member_level || "银级会员";
+  const spend = user.publicMetadata?.total_spend || 0;
+  const email = user.emailAddresses[0]?.emailAddress || "未填写";
 
-// 修改密码：调用 Clerk 官方改密弹窗，弃用旧接口
-function showChangePwd(){
-  clerk.openUserProfile({page: "security"});
+  // 填充页面，隐藏加载文字
+  document.getElementById("levelText").innerText = level;
+  document.getElementById("spendText").innerText = spend;
+  document.getElementById("userEmail").innerText = email;
+  loadWrap.style.display = "none";
+  infoWrap.style.display = "block";
+
+  // 退出登录逻辑
+  document.getElementById("logoutBtn").onclick = async ()=>{
+    await clerk.signOut();
+    location.href="/";
+  }
 }
 </script>
 </body>
