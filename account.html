@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的账户</title>
+<title>我的账户 | Re旅行</title>
+<!-- Clerk 登录SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
 body{background:#f8f9fa;padding-bottom:70px}
@@ -13,19 +15,19 @@ body{background:#f8f9fa;padding-bottom:70px}
 .level{font-size:16px;margin:8px 0;color:#d4af37}
 .spend{opacity:0.8;font-size:14px}
 .list{margin:20px}
-.item{background:#fff;padding:16px 20px;border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between}
+.item{background:#fff;padding:16px 20px;border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;cursor:pointer}
 .logout{margin:30px 20px}
-.logout button{width:100%;padding:14px;border:1px solid #f00;color:#f00;background:#fff;border-radius:12px;font-size:15px}
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee}
-.tab{flex:1;text-align:center;padding:10px 0}
-.tab p{font-size:12px;color:#777;margin-top:3px}
+.logout button{width:100%;padding:14px;border:1px solid #f00;color:#f00;background:#fff;border-radius:12px;font-size:15px;cursor:pointer}
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
 .tab.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
 <div class="back"><a href="/">← 返回首页</a></div>
 <div class="user-card">
-  <h2 id="userPhone">加载中</h2>
+  <h2 id="userName">加载中</h2>
   <div class="level">会员等级：<span id="userLevel"></span></div>
   <div class="spend">累计消费美金：$<span id="userSpend">0</span></div>
 </div>
@@ -37,56 +39,48 @@ body{background:#f8f9fa;padding-bottom:70px}
 <div class="logout"><button onclick="logout()">退出登录</button></div>
 
 <div class="bottom-tab">
-  <div class="tab"><p>首页</p></div>
-  <div class="tab"><p>讯息</p></div>
-  <div class="tab"><p>发布</p></div>
-  <div class="tab"><p>我的行程</p></div>
+  <div class="tab" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab" onclick="location.href='/mine.html'"><p>我的行程</p></div>
   <div class="tab active"><p>账户</p></div>
 </div>
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
+const clerk = new Clerk(CLERK_PUB_KEY);
 let userData = null;
+
 window.onload = async function(){
-  const token = localStorage.getItem("userToken");
-  if(!token){
-    alert("请先登录");
-    location.href="/login.html";
+  // 初始化 Clerk
+  await clerk.load();
+  const user = clerk.user;
+  // 未登录拦截，跳转首页弹出登录
+  if(!user){
+    location.href="/";
     return;
   }
-  const res = await fetch(`${API_BASE}/api/user/info`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({token})
-  });
-  const d = await res.json();
-  if(d.code!==200){
-    localStorage.clear();
-    location.href="/login.html";
-    return;
-  }
-  userData = d.user;
-  document.getElementById("userPhone").innerText = userData.phone;
-  document.getElementById("userLevel").innerText = userData.member_level;
-  document.getElementById("userSpend").innerText = userData.total_spend;
-  document.getElementById("userEmail").innerText = userData.email || "未填写";
+  userData = user;
+  // 填充用户信息
+  document.getElementById("userName").innerText = user.username || user.emailAddresses[0]?.emailAddress;
+  document.getElementById("userEmail").innerText = user.emailAddresses[0]?.emailAddress || "未填写";
+  // 读取会员等级、累计消费（存在用户公开元数据）
+  const meta = user.publicMetadata || {};
+  document.getElementById("userLevel").innerText = meta.member_level || "银级会员";
+  document.getElementById("userSpend").innerText = meta.total_spend || "0";
 }
-function logout(){
-  localStorage.removeItem("userToken");
-  localStorage.removeItem("userInfo");
+
+// Clerk 原生退出登录
+async function logout(){
+  await clerk.signOut();
   alert("已退出登录");
-  location.href="/login.html";
+  location.href="/";
 }
-async function showChangePwd(){
-  const oldPwd = prompt("请输入原密码");
-  const newPwd = prompt("请输入新密码");
-  if(!oldPwd||!newPwd) return;
-  const res = await fetch(`${API_BASE}/api/user/changepwd`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({phone:userData.phone,oldPwd,newPwd})
-  });
-  const d = await res.json();
-  alert(d.msg);
-  if(d.code===200) logout();
+
+// 修改密码：调用 Clerk 官方改密弹窗，弃用旧接口
+function showChangePwd(){
+  clerk.openUserProfile({page: "security"});
 }
 </script>
 </body>
