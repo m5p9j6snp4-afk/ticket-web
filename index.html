@@ -138,42 +138,39 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-// Clerk公钥（已填入你提供的密钥）
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-const clerk = new Clerk(CLERK_PUB_KEY);
+let clerk;
 
-// 页面初始化 Clerk登录状态判断
 window.onload = async function(){
+  clerk = new Clerk(CLERK_PUB_KEY);
   await clerk.load();
   const memberBtn = document.getElementById("memberBtn");
   const user = clerk.user;
 
   if (!user) {
-    // 未登录状态：点击弹出登录弹窗
     memberBtn.innerText = "登录/注册";
     memberBtn.onclick = () => clerk.openSignIn();
   } else {
-    // 已登录：读取用户存储的会员等级，无则默认银级
     const userLevel = user.publicMetadata?.member_level || "银级会员";
     memberBtn.innerText = userLevel;
-    memberBtn.onclick = () => location.href="/account.html";
-    // 点击会员文字弹窗等级说明
-    memberBtn.addEventListener("click", showMemberRule);
+    memberBtn.onclick = () => {
+      showMemberRule();
+      location.href="/account.html";
+    };
   }
   loadEvents();
 }
 
-// 底部账户按钮逻辑
+// 底部「账户」按钮
 function goAccount(){
-  if (!clerk.user) {
-    // 未登录直接打开注册界面
+  if (!clerk || !clerk.user) {
     clerk.openSignUp();
   } else {
     location.href="/account.html";
   }
 }
 
-// 加载演唱会列表（完全保留原有逻辑）
+// 加载演唱会列表
 async function loadEvents(){
   const res = await fetch(`${API_BASE}/api/events`);
   const list = await res.json();
@@ -202,13 +199,13 @@ function goSeat(id){
   location.href=`/seat.html?id=${id}`
 }
 
-// 展开/收起更多分类面板
+// 更多菜单展开/收起
 function toggleMore(){
   const panel = document.getElementById("morePanel");
-  panel.style.display = panel.style.display==="block" ? "none" : "block";
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
 }
 
-// 会员等级规则弹窗
+// 会员等级弹窗
 function showMemberRule(){
   alert("Re旅行会员体系\n初始：银级\n银→金：累计消费$2000\n每级消费为上一级300%\n等级：银 / 金 / 白金 / 钻石 / 钻石+ / 黑钻");
 }
