@@ -10,18 +10,11 @@
 body{background:#f7f8fa;padding-bottom:90px}
 header{background:#000;color:#fff;padding:30px 20px;display:flex;justify-content:space-between;align-items:flex-start}
 .header-left h1{font-size:26px;font-weight:600}
-.admin-tag{background:#333;padding:8px 14px;border-radius:20px;font-size:14px}
+/* 默认隐藏管理员标签 */
+.admin-tag{background:#333;padding:8px 14px;border-radius:20px;font-size:14px;display:none}
 .container{padding:20px}
-/* 第一行功能网格 */
 .grid-row1{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-/* 第二行功能网格 */
 .grid-row2{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-/* 更多板块容器 */
-.more-wrap{background:#fff;border-radius:16px;padding:20px;margin-bottom:24px}
-.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-/* 优惠板块 */
-.discount-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 30px}
-/* 通用功能按钮 */
 .func-btn{background:#fff;border-radius:14px;padding:20px 8px;text-align:center;cursor:pointer}
 .func-btn p{font-size:15px;color:#111}
 .search-box{width:100%;background:#fff;border-radius:14px;padding:16px 18px;border:none;font-size:15px;margin-bottom:30px}
@@ -36,58 +29,32 @@ header{background:#000;color:#fff;padding:30px 20px;display:flex;justify-content
     <div class="header-left">
         <h1>Re旅行</h1>
     </div>
-    <div class="admin-tag">超级管理员</div>
+    <div id="adminTag" class="admin-tag">超级管理员</div>
 </header>
 
 <div class="container">
-    <!-- 第一排4个按钮 -->
     <div class="grid-row1">
-        <div class="func-btn" onclick="location.href='hotel.html'">
-            <p>住宿</p>
-        </div>
-        <div class="func-btn" onclick="location.href='flight.html'">
-            <p>机票</p>
-        </div>
-        <div class="func-btn" onclick="location.href='flight-hotel.html'">
-            <p>机票+酒店</p>
-        </div>
-        <div class="func-btn" onclick="location.href='train.html'">
-            <p>高铁/火车</p>
-        </div>
+        <div class="func-btn" onclick="location.href='hotel.html'"><p>住宿</p></div>
+        <div class="func-btn" onclick="location.href='flight.html'"><p>机票</p></div>
+        <div class="func-btn" onclick="location.href='flight-hotel.html'"><p>机票+酒店</p></div>
+        <div class="func-btn" onclick="location.href='train.html'"><p>高铁/火车</p></div>
     </div>
-
-    <!-- 第二排4个按钮 -->
     <div class="grid-row2">
-        <div class="func-btn" onclick="location.href='homestay.html'">
-            <p>民宿</p>
-        </div>
-        <div class="func-btn" onclick="location.href='buy.html'">
-            <p>演唱会门票</p>
-        </div>
-        <div class="func-btn" onclick="location.href='car-rent.html'">
-            <p>租车接送</p>
-        </div>
-        <div class="func-btn" onclick="location.href='more.html'">
-            <p>更多</p>
-        </div>
+        <div class="func-btn" onclick="location.href='homestay.html'"><p>民宿</p></div>
+        <div class="func-btn" onclick="location.href='buy.html'"><p>演唱会门票</p></div>
+        <div class="func-btn" onclick="location.href='car-rent.html'"><p>租车接送</p></div>
+        <div class="func-btn" onclick="location.href='more.html'"><p>更多</p></div>
     </div>
-
-    <!-- 搜索框 -->
     <input class="search-box" placeholder="搜索目的地、航班、演唱会">
-
-    <!-- 限时优惠 -->
     <h3 style="color:#666;margin-bottom:10px">限时优惠</h3>
     <div class="discount-row">
         <div class="func-btn" onclick="location.href='discount-concert.html'">演唱会折扣</div>
         <div class="func-btn" onclick="location.href='discount-flight.html'">机票满减</div>
     </div>
-
-    <!-- 热门演唱会区域 -->
     <h3 style="color:#666;margin-bottom:10px">热门演唱会</h3>
     <div style="background:#fff;height:120px;border-radius:14px"></div>
 </div>
 
-<!-- 底部导航 -->
 <div class="bottom-tab">
   <div class="tab-cell active" onclick="location.href='index.html'"><p>首页</p></div>
   <div class="tab-cell" onclick="location.href='message.html'"><p>讯息</p></div>
@@ -99,8 +66,20 @@ header{background:#000;color:#fff;padding:30px 20px;display:flex;justify-content
 <script>
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
+
+// 你的管理员邮箱，请修改为你实际用于登录的账号
+const ADMIN_EMAIL = "your-email@example.com"; 
+
 window.onload = async () => {
     await clerk.load({ localization: { locale: "zh-HK" } });
+    
+    // 如果已登录，检查是否为管理员
+    if (clerk.user) {
+        const userEmail = clerk.user.primaryEmailAddress.emailAddress;
+        if (userEmail === ADMIN_EMAIL) {
+            document.getElementById('adminTag').style.display = 'block';
+        }
+    }
 }
 </script>
 </body>
