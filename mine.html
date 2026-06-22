@@ -1,33 +1,14 @@
 <!DOCTYPE html>
-// 页面加载先校验登录状态
-async function checkLogin(){
-  const token = localStorage.getItem("userToken");
-  if(!token){
-    location.href="/login.html";
-    return false;
-  }
-  const res = await fetch(`${API_BASE}/api/user/info`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({token})
-  });
-  const data = await res.json();
-  if(data.code !== 200){
-    localStorage.clear();
-    location.href="/login.html";
-    return false;
-  }
-  return data.user;
-}
-// 页面初始化执行
-const loginUser = await checkLogin();
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的订单 | 星耀售票</title>
+<!-- Clerk 登录SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<title>我的订单 | Re旅行</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa}
+body{background:#f7f8fa;padding-bottom:70px}
 nav{background:#0a0e17;padding:14px 16px}
 nav a{color:#fff;text-decoration:none}
 .container{max-width:700px;margin:30px auto;padding:0 14px}
@@ -43,6 +24,11 @@ nav a{color:#fff;text-decoration:none}
 .tab.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
 h3{margin:30px 0 14px}
 .empty{text-align:center;padding:60px 0;color:#999}
+/* 底部导航统一样式 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
+.tab-cell.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
@@ -63,10 +49,36 @@ h3{margin:30px 0 14px}
     <div id="flightList"></div>
   </div>
 </div>
+
+<!-- 底部导航（和全站统一） -->
+<div class="bottom-tab">
+  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell active"><p>我的行程</p></div>
+  <div class="tab-cell" onclick="location.href='/account.html'"><p>账户</p></div>
+</div>
+
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
+const clerk = new Clerk(CLERK_PUB_KEY);
 // 这里填你后台管理员密码，用于读取全部订单
 const ADMIN_PASSWORD = "替换成你的后台密码";
+
+// 页面初始化 Clerk登录校验
+window.onload = async function(){
+  await clerk.load();
+  // 未登录拦截，跳转首页登录
+  if(!clerk.user){
+    alert("请先登录后查看订单");
+    location.href="/";
+    return;
+  }
+  // 登录成功加载订单
+  loadConcertOrder();
+  loadFlightOrder();
+}
 
 // 切换标签
 function switchTab(type){
@@ -144,10 +156,6 @@ async function loadFlightOrder(){
     `
   })
 }
-
-// 页面加载自动执行
-loadConcertOrder();
-loadFlightOrder();
 </script>
 </body>
 </html>
