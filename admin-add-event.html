@@ -17,9 +17,14 @@ nav a{color:#fff;text-decoration:none}
 .form-item{margin:20px 0}
 label{display:block;margin-bottom:8px;font-weight:500}
 input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:15px}
-.btn-save{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;cursor:pointer}
-.tip{font-size:14px;color:#666}
+.btn-save{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;cursor:pointer;margin-top:20px}
 .no-perm{text-align:center;margin-top:80px;color:#ef4444;font-size:18px}
+/* 票价分区样式 */
+.price-zone-row{display:flex;gap:10px;margin-bottom:10px}
+.price-zone-row input{flex:1}
+.btn-add-zone{background:#e0e7ff;color:#4f46e5;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;margin-bottom:15px}
+.btn-del-zone{background:#fee2e2;color:#ef4444;border:none;padding:0 12px;border-radius:8px;cursor:pointer}
+/* 底部导航 */
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
 .tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
@@ -33,12 +38,13 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 </div>
 <div class="container" id="formWrap" style="display:none">
   <h2 class="page-title">发布新演唱会</h2>
+  
   <div class="upload-box" onclick="document.getElementById('imgFile').click()">
     <p>点击上传演唱会海报（相册选择）</p>
   </div>
   <input type="file" id="imgFile" accept="image/*" style="display:none">
   <img class="preview" id="imgPreview">
-  <p class="tip" id="uploadTip"></p>
+  <p id="uploadTip" style="font-size:14px;color:#666;margin-bottom:15px;"></p>
 
   <div class="form-item">
     <label>演出名称</label>
@@ -48,10 +54,20 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
     <label>演出日期</label>
     <input type="date" id="eventDate">
   </div>
+
+  <!-- 🌟 新增：多票价分区设置 -->
   <div class="form-item">
-    <label>基础票价 HK$</label>
-    <input type="number" id="eventPrice" placeholder="780">
+    <label>座位区域与对应票价</label>
+    <div id="zoneContainer">
+      <div class="price-zone-row">
+        <input type="text" class="zone-name" placeholder="区域（如：1A）">
+        <input type="number" class="zone-price" placeholder="价格 HK$（如：1380）">
+        <button class="btn-del-zone" onclick="this.parentElement.remove()">X</button>
+      </div>
+    </div>
+    <button class="btn-add-zone" onclick="addZoneField()">+ 添加座位区域/票价</button>
   </div>
+
   <button class="btn-save" onclick="submitAdd()">保存发布</button>
 </div>
 
@@ -69,18 +85,9 @@ const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
 let posterUrl = "";
 let adminPassword = "Rene 12345678"; 
-const fileInput = document.getElementById("imgFile");
-const preview = document.getElementById("imgPreview");
-const tip = document.getElementById("uploadTip");
 
 window.onload = async function(){
-  await clerk.load({
-    localization: {
-      locale: "zh-CN",
-      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续" } }
-    }
-  });
-
+  await clerk.load({ localization: { locale: "zh-CN", signIn: { start: { title: "登录 Re旅行" } } } });
   const user = clerk.user;
   if(!user){
     alert("请先登录账号");
@@ -88,47 +95,84 @@ window.onload = async function(){
     return;
   }
   
-  // 🛡️ 核心修复：提取 Google 登录用户的 Email 地址
   const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
 
-  // 🌟 只要是你的 Google 邮箱，直接无条件放行
   if (email === "1477rene@gmail.com" || meta.role === "admin") {
     document.getElementById("formWrap").style.display = "block";
     document.getElementById("permWrap").style.display = "none";
-    console.log("🎉 发布页面已通过 Google 邮箱直通识别！");
   } else {
     document.getElementById("permWrap").style.display = "block";
     document.getElementById("formWrap").style.display = "none";
   }
 }
 
-fileInput.onchange = async function(e){
-  const file = e.target.files[0];if(!file)return;
-  tip.innerText = "图片上传中...";
-  const formData = new FormData();formData.append("file", file);
+// 动态添加区域输入框
+function addZoneField() {
+  const container = document.getElementById("zoneContainer");
+  const div = document.createElement("div");
+  div.className = "price-zone-row";
+  div.innerHTML = `
+    <input type="text" class="zone-name" placeholder="区域（如：3F）">
+    <input type="number" class="zone-price" placeholder="价格 HK$（如：780）">
+    <button class="btn-del-zone" onclick="this.parentElement.remove()">X</button>
+  `;
+  container.appendChild(div);
+}
+
+// 上传图片
+document.getElementById("imgFile").onchange = async function(e){
+  const file = e.target.files[0]; if(!file) return;
+  document.getElementById("uploadTip").innerText = "图片上传中...";
+  const formData = new FormData(); formData.append("file", file);
   try{
     const res = await fetch("https://telegra.ph/upload", {method:"POST", body:formData});
     const json = await res.json();
     posterUrl = "https://telegra.ph" + json[0].src;
-    preview.src = posterUrl;preview.style.display = "block";
-    tip.innerText = "海报上传完成";
-  }catch(err){tip.innerText = "上传失败";}
+    document.getElementById("imgPreview").src = posterUrl;
+    document.getElementById("imgPreview").style.display = "block";
+    document.getElementById("uploadTip").innerText = "海报上传完成";
+  }catch(err){ document.getElementById("uploadTip").innerText = "上传失败"; }
 }
 
+// 提交发布
 async function submitAdd(){
   const name = document.getElementById("eventName").value.trim();
   const date = document.getElementById("eventDate").value;
-  const price = Number(document.getElementById("eventPrice").value);
-  if(!name||!date||!price){alert("请完整填写全部演出信息");return;}
+  
+  // 收集所有分区票价数据
+  const zoneRows = document.querySelectorAll(".price-zone-row");
+  let zones = [];
+  let basePrice = 0; // 取填写的第一个价格作为基础显示票价
+  
+  zoneRows.forEach((row, index) => {
+    const zName = row.querySelector(".zone-name").value.trim();
+    const zPrice = Number(row.querySelector(".zone-price").value);
+    if(zName && zPrice) {
+      zones.push({ name: zName, price: zPrice });
+      if(index === 0) basePrice = zPrice;
+    }
+  });
+
+  if(!name || !date || zones.length === 0){
+    alert("请完整填写演出名称、日期并至少添加一个座位票价区域");
+    return;
+  }
   
   const res = await fetch(`${API_BASE}/api/admin/add-event?pwd=${encodeURIComponent(adminPassword)}`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,date,price,poster:posterUrl})
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name,
+      date,
+      price: basePrice, // 兼容旧版的基础票价
+      zones: zones,     // 新增的多分区数据傳給後端
+      poster: posterUrl
+    })
   });
   const data = await res.json();
   if(data.success){
-    alert("演唱会发布成功！刷新首页查看");
+    alert("演唱会发布成功！");
     location.href = "/";
   } else {
     alert(data.msg || "发布失败");
