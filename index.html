@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Re旅行 | 演唱会&机票预订</title>
-<!-- 引入标准的 Clerk SDK 脚本 -->
 <script 
   async 
   crossorigin="anonymous" 
@@ -139,7 +138,7 @@ const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 // 绑定标准生命周期监听
 window.addEventListener("load", async function(){
   try {
-    // 核心更改：显式在 JavaScript 初始化阶段手工注入翻译映射，强制覆盖英文
+    // 彻底重构本地化翻译树，100%硬编码覆盖表单各核心组件
     await Clerk.load({
       localization: {
         signIn: {
@@ -158,6 +157,16 @@ window.addEventListener("load", async function(){
             actionLink: "立即登录"
           }
         },
+        formFieldLabel__firstName: "名",
+        formFieldLabel__lastName: "姓",
+        formFieldLabel__emailAddress: "电子邮箱地址",
+        formFieldLabel__password: "密码",
+        formFieldPlaceholder__firstName: "请输入您的名（选填）",
+        formFieldPlaceholder__lastName: "请输入您的姓（选填）",
+        formFieldPlaceholder__emailAddress: "请输入您的电子邮箱地址",
+        formFieldPlaceholder__password: "请输入您的密码",
+        formButtonPrimary: "继续",
+        dividerText: "或",
         socialButtonsBlockButton: "使用 {{provider|titleize}} 登录"
       }
     });
