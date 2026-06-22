@@ -9,12 +9,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f7f8fa;padding-bottom:70px}
-nav{background:#0a0e17;padding:14px 16px}
+nav{background:#0a0e17;padding:14px 16px;display:flex;justify-content:between;align-items:center}
 nav a{color:#fff;text-decoration:none}
+.welcome-msg{color:#a5b4fc;font-size:14px;font-weight:500}
 .container{max-width:920px;margin:30px auto;padding:0 14px}
 .no-perm-box{max-width:420px;margin:60px auto;text-align:center}
 .no-perm-box h2{margin-bottom:20px;color:#ef4444}
 .order-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:16px}
+.order-card h4{font-size:17px;margin-bottom:8px;color:#111}
+.badge-zone{display:inline-block;background:#e0e7ff;color:#4f46e5;padding:3px 8px;border-radius:6px;font-size:13px;font-weight:bold;margin-bottom:8px}
 .btn-ok{background:#16a34a;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
 .btn-no{background:#ef4444;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
 h3{margin-top:40px;margin-bottom:16px;color:#222}
@@ -26,7 +29,12 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
 </style>
 </head>
 <body>
-<nav><a href="/">← 返回首页</a></nav>
+<nav>
+  <a href="/">← 返回首页</a>
+  <!-- 🌟 智能问候语显示锚点 -->
+  <span class="welcome-msg" id="adminGreeting"></span>
+</nav>
+
 <div class="container" id="noPermWrap" style="display:none">
   <div class="no-perm-box">
     <h2>无管理员访问权限</h2>
@@ -54,43 +62,38 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
-// 🔑 這裡自動綁定你 Worker 後端的真實密碼，不需要依賴 Clerk 後台儲存
 let adminPwd = "Rene 12345678"; 
+
+// 🌟 根据时间生成问候语
+function getGreetingWord() {
+  const hr = new Date().getHours();
+  if (hr >= 5 && hr < 12) return "早上好";
+  if (hr >= 12 && hr < 18) return "下午好";
+  return "晚上好";
+}
 
 window.onload = async function(){
   await clerk.load({
-    localization: {
-      locale: "zh-CN",
-      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" } },
-      signUp: { start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" } },
-      socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
-      dividerText: "或",
-      formButtonPrimary: "继续",
-      formFieldLabel__firstName: "名",
-      formFieldLabel__lastName: "姓",
-      formFieldLabel__emailAddress: "电子邮箱",
-      formFieldLabel__password: "密码"
-    }
+    localization: { locale: "zh-CN", signIn: { start: { title: "登录 Re旅行" } } }
   });
 
   const user = clerk.user;
   if(!user){
     alert("请先登录账号");
-    clerk.openSignIn({
-      afterSignInUrl: window.location.href,
-      afterSignUpUrl: window.location.href
-    });
+    clerk.openSignIn({ afterSignInUrl: window.location.href });
     return;
   }
 
   const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
 
-  // 🛠️ 核心：判斷 Clerk 裡是否有 {"role": "admin"} 或者精確匹配你的郵箱
   if (meta.role === "admin" || email === "1477rene@gmail.com") {
     document.getElementById("adminWrap").style.display = "block";
     document.getElementById("noPermWrap").style.display = "none";
-    console.log("🎉 超级管理员权限验证成功！");
+    
+    // 🌟 如果是管理员Rene登录，渲染专属问候语，不再显示任何普通消费金额
+    document.getElementById("adminGreeting").innerText = `${getGreetingWord()}，管理员 Rene`;
+    
     renderLoader();
   } else {
     document.getElementById("noPermWrap").style.display = "block";
@@ -109,15 +112,21 @@ async function renderLoader() {
   }
 }
 
+// 🌟 渲染演唱会订单：增加了区域/位置的具体显示
 function renderOrders(list){
-  const wrap = document.getElementById("orderList");wrap.innerHTML="";
+  const wrap = document.getElementById("orderList"); wrap.innerHTML="";
   if(!list || list.length===0){wrap.innerHTML="<p>暂无演唱会订单</p>";return;}
   list.forEach(item=>{
     const currentNo = item.order_no || item.orderNo || "";
+    // 读取具体的位置信息（兼容后端可能返回的 zone 字段）
+    const seatZone = item.zone || item.seat_zone || "未指定区域";
+    
     wrap.innerHTML += `
       <div class="order-card">
         <h4>${item.event_name || "未知演出"}</h4>
+        <div class="badge-zone">已选位置/区域: ${seatZone}</div>
         <p>订单号：${currentNo}</p>
+        <p>价格金额：HK$ ${item.price || "0"}</p>
         <p>购票人：${item.username || "游客"} ${item.contact || ""}</p>
         <p>当前状态：${item.status || "未知"}</p>
         <p>邮箱：${item.email || "未填写"}</p>
@@ -127,13 +136,13 @@ function renderOrders(list){
           <button class="btn-no" onclick="setReject('${currentNo}')">驳回订单</button>
         `:""}
       </div>
-    `
-  })
+    `;
+  });
 }
 
 async function setPaid(orderNo){
   if(!orderNo) return alert("单号错误");
-  const res = await fetch(`${API_BASE}/api/admin/set-status`,{
+  await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"paid"})
   });
@@ -142,7 +151,7 @@ async function setPaid(orderNo){
 
 async function setReject(orderNo){
   if(!orderNo) return alert("单号错误");
-  const res = await fetch(`${API_BASE}/api/admin/set-status`,{
+  await fetch(`${API_BASE}/api/admin/set-status`,{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({pwd:adminPwd,orderNo,status:"reject"})
   });
@@ -153,8 +162,7 @@ async function loadFlightOrders(){
   try {
     const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${encodeURIComponent(adminPwd)}`);
     const list = await res.json();
-    const wrap = document.getElementById("flightOrderList");
-    wrap.innerHTML="";
+    const wrap = document.getElementById("flightOrderList"); wrap.innerHTML="";
     if(!list || list.length===0){wrap.innerHTML="<p>暂无机票订单</p>";return;}
     list.forEach(item=>{
       let statusText = item.status=="unpaid"?"未上传凭证":item.status=="checking"?"待核验":item.status=="paid"?"已确认":"已驳回";
@@ -174,8 +182,8 @@ async function loadFlightOrders(){
             <button class="btn-no" onclick="flightReject('${currentNo}')">驳回订单</button>
           `:""}
         </div>
-      `
-    })
+      `;
+    });
   } catch(e) {
     console.error("加载机票失败：", e);
   }
