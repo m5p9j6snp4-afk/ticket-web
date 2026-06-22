@@ -2,15 +2,16 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>住宿 | Re旅行</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
         body{background:#f7f8fa;padding:20px;padding-bottom:100px}
-        .header{font-size:24px;font-weight:bold;margin-bottom:20px}
+        .header{font-size:24px;font-weight:bold;margin-bottom:20px;cursor:pointer}
         .section-title{font-size:18px;margin:25px 0 15px;color:#333;font-weight:600}
         .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-        .item{background:#fff;padding:15px 5px;text-align:center;border-radius:10px;cursor:pointer;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+        /* 将 item 改为 a 标签，并去除默认样式 */
+        .item{background:#fff;padding:15px 5px;text-align:center;border-radius:10px;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);color:#000;text-decoration:none;display:block}
     </style>
 </head>
 <body>
@@ -33,7 +34,8 @@
             let grid = document.createElement('div');
             grid.className = 'grid';
             globalData[region].forEach(city => {
-                grid.innerHTML += `<div class="item" onclick="location.href='hotel-list.html?r=${city}'">${city}</div>`;
+                // 使用 <a href="..."> 代替 onclick，这在所有移动端浏览器都是最稳的
+                grid.innerHTML += `<a href="hotel-list.html?r=${encodeURIComponent(city)}" class="item">${city}</a>`;
             });
             container.appendChild(grid);
         }
