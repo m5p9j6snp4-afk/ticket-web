@@ -1,145 +1,42 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>住宿 | Re旅行</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa;padding-bottom:90px;color:#222}
-.top-header{background:#000;color:#fff;padding:22px 18px;display:flex;align-items:center;gap:12px}
-.back{cursor:pointer;font-size:16px}
-.page-title{font-size:20px;font-weight:600}
-.container{padding:18px}
-/* 搜索框 */
-.search-input{width:100%;padding:14px 16px;border-radius:14px;border:none;font-size:15px;margin-bottom:20px}
-/* 地区分类标题 */
-.region-title{font-size:16px;font-weight:600;margin:20px 0 10px;color:#1e293b}
-/* 地区网格 */
-.region-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-.region-item{background:#fff;padding:16px 8px;text-align:center;border-radius:12px;cursor:pointer}
-.region-item p{font-size:14px}
-/* 无搜索结果提示 */
-.empty-tip{text-align:center;padding:40px 0;color:#777;display:none}
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
-.tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
-.tab-cell p{font-size:12px;color:#777;margin-top:4px;pointer-events:none}
-.tab-cell.active p{color:#000;font-weight:600}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>住宿 | Re旅行</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+        body{background:#f7f8fa;padding:20px;padding-bottom:100px}
+        .header{font-size:24px;font-weight:bold;margin-bottom:20px}
+        .section-title{font-size:18px;margin:25px 0 15px;color:#333;font-weight:600}
+        .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .item{background:#fff;padding:15px 5px;text-align:center;border-radius:10px;cursor:pointer;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+    </style>
 </head>
 <body>
-<div class="top-header">
-    <span class="back" onclick="location.href='index.html'">←</span>
-    <h2 class="page-title">住宿預訂</h2>
-</div>
+    <div class="header" onclick="location.href='index.html'">← 住宿預訂</div>
+    
+    <div id="content"></div>
 
-<div class="container">
-    <!-- 搜索框 -->
-    <input class="search-input" id="searchInput" placeholder="搜尋國家、城市、酒店" oninput="filterRegion()">
+    <script>
+        const globalData = {
+            "亞洲": ["中國內地", "香港", "澳門", "台灣", "日本", "韓國", "泰國", "新加坡", "馬來西亞", "越南", "印尼", "菲律賓"],
+            "歐洲": ["英國", "法國", "德國", "意大利", "西班牙", "瑞士", "荷蘭", "希臘", "葡萄牙", "冰島", "奧地利"],
+            "美洲": ["美國", "加拿大", "墨西哥", "巴西", "阿根廷", "智利"],
+            "大洋洲": ["澳洲", "紐西蘭", "斐濟"],
+            "中東/非洲": ["迪拜", "土耳其", "埃及", "南非", "摩洛哥", "馬爾代夫"]
+        };
 
-    <!-- 全球地區分類 -->
-    <div id="allRegionWrap">
-        <h3 class="region-title">亞洲</h3>
-        <div class="region-grid" data-area="asia">
-            <div class="region-item"><p>中國內地</p></div>
-            <div class="region-item"><p>香港</p></div>
-            <div class="region-item"><p>澳門</p></div>
-            <div class="region-item"><p>台灣</p></div>
-            <div class="region-item"><p>日本</p></div>
-            <div class="region-item"><p>韓國</p></div>
-            <div class="region-item"><p>泰國</p></div>
-            <div class="region-item"><p>馬來西亞</p></div>
-            <div class="region-item"><p>新加坡</p></div>
-            <div class="region-item"><p>越南</p></div>
-            <div class="region-item"><p>印尼</p></div>
-            <div class="region-item"><p>菲律賓</p></div>
-        </div>
-
-        <h3 class="region-title">歐洲</h3>
-        <div class="region-grid" data-area="europe">
-            <div class="region-item"><p>英國</p></div>
-            <div class="region-item"><p>法國</p></div>
-            <div class="region-item"><p>德國</p></div>
-            <div class="region-item"><p>意大利</p></div>
-            <div class="region-item"><p>西班牙</p></div>
-            <div class="region-item"><p>瑞士</p></div>
-            <div class="region-item"><p>荷蘭</p></div>
-            <div class="region-item"><p>希臘</p></div>
-            <div class="region-item"><p>葡萄牙</p></div>
-        </div>
-
-        <h3 class="region-title">美洲</h3>
-        <div class="region-grid" data-area="america">
-            <div class="region-item"><p>美國</p></div>
-            <div class="region-item"><p>加拿大</p></div>
-            <div class="region-item"><p>墨西哥</p></div>
-            <div class="region-item"><p>巴西</p></div>
-        </div>
-
-        <h3 class="region-title">大洋洲</h3>
-        <div class="region-grid" data-area="oceania">
-            <div class="region-item"><p>澳洲</p></div>
-            <div class="region-item"><p>紐西蘭</p></div>
-        </div>
-
-        <h3 class="region-title">中東/非洲</h3>
-        <div class="region-grid" data-area="other">
-            <div class="region-item"><p>迪拜</p></div>
-            <div class="region-item"><p>土耳其</p></div>
-            <div class="region-item"><p>埃及</p></div>
-            <div class="region-item"><p>馬爾代夫</p></div>
-        </div>
-    </div>
-
-    <!-- 搜不到結果提示 -->
-    <div class="empty-tip" id="emptyTip">沒有匹配的地區，請更換關鍵字搜尋</div>
-</div>
-
-<div class="bottom-tab">
-  <div class="tab-cell" onclick="location.href='index.html'"><p>首页</p></div>
-  <div class="tab-cell" onclick="location.href='message.html'"><p>讯息</p></div>
-  <div class="tab-cell" onclick="location.href='admin-add-event.html'"><p>发布</p></div>
-  <div class="tab-cell" onclick="location.href='mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell" onclick="location.href='account.html'"><p>账户</p></div>
-</div>
-
-<script>
-const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-const clerk = new Clerk(CLERK_PUB_KEY);
-
-window.onload = async () => {
-    await clerk.load({ localization: { locale: "zh-HK" } });
-}
-
-// 搜尋過濾功能
-function filterRegion() {
-    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
-    const allBlocks = document.querySelectorAll(".region-grid");
-    const emptyTip = document.getElementById("emptyTip");
-    let hasMatch = false;
-
-    allBlocks.forEach(block => {
-        const items = block.querySelectorAll(".region-item");
-        let blockHasItem = false;
-        items.forEach(item => {
-            const text = item.querySelector("p").innerText.toLowerCase();
-            if(text.includes(keyword)){
-                item.style.display = "block";
-                blockHasItem = true;
-                hasMatch = true;
-            }else{
-                item.style.display = "none";
-            }
-        })
-        // 控制分類標題顯隱
-        const title = block.previousElementSibling;
-        title.style.display = blockHasItem ? "block" : "none";
-        block.style.display = blockHasItem ? "grid" : "none";
-    })
-
-    emptyTip.style.display = hasMatch ? "none" : "block";
-}
-</script>
+        const container = document.getElementById('content');
+        for (let region in globalData) {
+            container.innerHTML += `<div class="section-title">${region}</div>`;
+            let grid = document.createElement('div');
+            grid.className = 'grid';
+            globalData[region].forEach(city => {
+                grid.innerHTML += `<div class="item" onclick="location.href='hotel-list.html?r=${city}'">${city}</div>`;
+            });
+            container.appendChild(grid);
+        }
+    </script>
 </body>
 </html>
