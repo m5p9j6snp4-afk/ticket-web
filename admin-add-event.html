@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Clerk登录SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 <title>发布演唱会 | Re旅行商家后台</title>
 <style>
@@ -21,7 +20,6 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 .btn-save{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;cursor:pointer}
 .tip{font-size:14px;color:#666}
 .no-perm{text-align:center;margin-top:80px;color:#ef4444;font-size:18px}
-/* 底部导航统一样式 */
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
 .tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
@@ -57,7 +55,6 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   <button class="btn-save" onclick="submitAdd()">保存发布</button>
 </div>
 
-<!-- 全站统一底部导航 -->
 <div class="bottom-tab">
   <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
   <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
@@ -71,7 +68,6 @@ const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
 let posterUrl = "";
-// 🔑 自動綁定你 Worker 後端的真實密碼
 let adminPassword = "Rene 12345678"; 
 const fileInput = document.getElementById("imgFile");
 const preview = document.getElementById("imgPreview");
@@ -81,36 +77,26 @@ window.onload = async function(){
   await clerk.load({
     localization: {
       locale: "zh-CN",
-      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" } },
-      signUp: { start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" } },
-      socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
-      dividerText: "或",
-      formButtonPrimary: "继续",
-      formFieldLabel__firstName: "名",
-      formFieldLabel__lastName: "姓",
-      formFieldLabel__emailAddress: "电子邮箱",
-      formFieldLabel__password: "密码"
+      signIn: { start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续" } }
     }
   });
 
   const user = clerk.user;
   if(!user){
     alert("请先登录账号");
-    clerk.openSignIn({
-      afterSignInUrl: window.location.href,
-      afterSignUpUrl: window.location.href
-    });
+    clerk.openSignIn({ afterSignInUrl: window.location.href });
     return;
   }
   
+  // 🛡️ 核心修复：提取 Google 登录用户的 Email 地址
   const email = user.emailAddresses[0]?.emailAddress;
   const meta = user.publicMetadata || {};
 
-  // 🛠️ 核心：同時支援 Clerk 的 {"role": "admin"} 標籤和你的綁定郵箱
-  if (meta.role === "admin" || email === "1477rene@gmail.com") {
+  // 🌟 只要是你的 Google 邮箱，直接无条件放行
+  if (email === "1477rene@gmail.com" || meta.role === "admin") {
     document.getElementById("formWrap").style.display = "block";
     document.getElementById("permWrap").style.display = "none";
-    console.log("🎉 发布页面验证成功！");
+    console.log("🎉 发布页面已通过 Google 邮箱直通识别！");
   } else {
     document.getElementById("permWrap").style.display = "block";
     document.getElementById("formWrap").style.display = "none";
@@ -127,7 +113,7 @@ fileInput.onchange = async function(e){
     posterUrl = "https://telegra.ph" + json[0].src;
     preview.src = posterUrl;preview.style.display = "block";
     tip.innerText = "海报上传完成";
-  }catch(err){tip.innerText = "上传失败，切换5G网络重试";}
+  }catch(err){tip.innerText = "上传失败";}
 }
 
 async function submitAdd(){
