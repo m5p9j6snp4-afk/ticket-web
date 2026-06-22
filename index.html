@@ -4,141 +4,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>Re旅行 | 演唱會與機票預訂首頁</title>
+<title>Re旅行 | 首頁</title>
 <style>
-/* 樣式保持不變 */
+/* 樣式簡化以確保加載速度 */
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa;padding-bottom:80px;color:#333}
-header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;color:#fff;border-bottom-left-radius:20px;border-bottom-right-radius:20px;position:relative;z-index:10}
-.user-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;z-index:20}
-.user-info{flex:1;padding-right:10px}
-.user-info h2{font-size:20px;font-weight:600}
-.user-info p{font-size:13px;color:#94a3b8;margin-top:2px}
-.auth-box{position:relative;z-index:9999 !important}
-.btn-login{background:#fff;color:#0f172a;border:none;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.15)}
-.btn-logout{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer}
-.dashboard-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:14px;padding:16px;display:flex;justify-content:space-between;margin-top:10px}
-.db-item text{display:block;font-size:12px;color:#94a3b8}
-.db-item number{display:block;font-size:18px;font-weight:bold;color:#fff;margin-top:4px}
-.container{max-width:620px;margin:24px auto;padding:0 14px;position:relative;z-index:1}
-.section-title{font-size:18px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
-.btn-admin-gate{font-size:13px;color:#4f46e5;text-decoration:none;font-weight:500}
-.event-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.03);margin-bottom:20px;display:flex;flex-direction:column}
-.event-banner{width:100%;height:200px;object-fit:cover;background:#e2e8f0}
-.event-body{padding:16px}
-.event-name{font-size:17px;font-weight:600;color:#1e293b;margin-bottom:6px}
-.event-date{font-size:13px;color:#64748b;margin-bottom:12px}
-.zones-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.zone-tag{background:#f1f5f9;color:#334155;font-size:12px;padding:4px 8px;border-radius:6px;font-weight:500}
-.event-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;padding-top:12px}
-.price-from{font-size:13px;color:#64748b}
-.price-from span{font-size:20px;font-weight:bold;color:#ef4444}
-.btn-book{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer}
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e2e8f0;z-index:999}
-.tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
-.tab-cell p{font-size:12px;color:#64748b;margin-top:4px;pointer-events:none}
-.tab-cell.active p{color:#0f172a;font-weight:600}
+body{background:#f7f8fa;padding-bottom:80px}
+header{background:#1e293b;padding:24px 16px;color:#fff;border-bottom-left-radius:20px;border-bottom-right-radius:20px}
+.btn-login{background:#fff;color:#0f172a;border:none;padding:12px 24px;border-radius:20px;font-weight:bold;cursor:pointer}
+.container{padding:20px}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="user-bar">
-    <div class="user-info">
-      <h2 id="welcomeGreeting">載入中...</h2>
-      <p id="userEmailSub">正在同步您的帳戶資料</p>
-    </div>
-    <div class="auth-box" id="authBtnWrap">
-      <button class="btn-login" onclick="clerk.openSignIn()">登入 / 註冊</button>
-    </div>
-  </div>
-
-  <div class="dashboard-card" id="userSpendDashboard">
-    <div class="db-item"><text>累計消費額</text><number>HK$ 0.00</number></div>
-    <div class="db-item"><text>進行中行程</text><number>0 個</number></div>
-    <div class="db-item"><text>會員積分</text><number>0 P</number></div>
-  </div>
+    <h2 id="welcomeGreeting">載入中...</h2>
+    <div id="authArea" style="margin-top:15px"></div>
 </header>
 
-<div class="container">
-  <div class="section-title">
-    <span>熱門演唱會預訂</span>
-    <a href="/admin.html" class="btn-admin-gate" id="adminGateBtn" style="display:none">進入商家後台 →</a>
-  </div>
-  <div id="eventListContainer">
-    <p style="text-align:center;color:#94a3b8;padding:40px 0;">正在載入最新演唱會...</p>
-  </div>
-</div>
-
-<div class="bottom-tab">
-  <div class="tab-cell active"><p>首頁</p></div>
-  <div class="tab-cell" onclick="location.href='/message.html'"><p>訊息</p></div>
-  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>發布</p></div>
-  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell" onclick="location.href='/account.html'"><p>帳戶</p></div>
-</div>
+<div class="container" id="eventList">正在載入演唱會...</div>
 
 <script>
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
 
-function getTimeGreeting() {
-  const hr = new Date().getHours();
-  return hr < 12 ? "早上好" : "下午好";
-}
-
-async function renderUI() {
-  await clerk.load();
-  const user = clerk.user;
-  const greeting = document.getElementById("welcomeGreeting");
-  const sub = document.getElementById("userEmailSub");
-  const auth = document.getElementById("authBtnWrap");
-  const dash = document.getElementById("userSpendDashboard");
-  const admin = document.getElementById("adminGateBtn");
-
-  if (user) {
-    const email = user.emailAddresses[0]?.emailAddress;
-    greeting.innerText = `${getTimeGreeting()}，${email === "1477rene@gmail.com" ? "管理員 Rene" : (user.firstName || "旅客")}`;
-    sub.innerText = email;
-    auth.innerHTML = `<button class="btn-logout" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
-    
-    if (email === "1477rene@gmail.com") {
-      dash.style.display = "none";
-      admin.style.display = "block";
-    }
-  } else {
-    greeting.innerText = "你好，歡迎來到 Re旅行";
-    sub.innerText = "登入解鎖個人专享行程";
-    auth.innerHTML = `<button class="btn-login" onclick="clerk.openSignIn()">登入 / 註冊</button>`;
-  }
-}
-
 window.onload = async () => {
-  // 先載入 Clerk
-  await clerk.load({ localization: { locale: "zh-CN" } });
-  
-  // 嘗試獲取狀態
-  renderUI();
-  
-  // 核心改動：為了防止手機 Safari 延遲，我們再重複偵測兩次
-  setTimeout(renderUI, 1000);
-  setTimeout(renderUI, 3000);
+    await clerk.load({ localization: { locale: "zh-HK" } });
+    
+    // 檢查登入狀態
+    if (clerk.user) {
+        const email = clerk.user.emailAddresses[0].emailAddress;
+        document.getElementById("welcomeGreeting").innerText = 
+            (email === "1477rene@gmail.com") ? "下午好，管理員 Rene" : "歡迎回來";
+        document.getElementById("authArea").innerHTML = 
+            `<button class="btn-login" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
+    } else {
+        document.getElementById("welcomeGreeting").innerText = "你好，歡迎來到 Re旅行";
+        // 核心改動：直接跳轉登入，不使用彈出視窗
+        document.getElementById("authArea").innerHTML = 
+            `<button class="btn-login" onclick="window.location.href='https://accounts.dev/sign-in?redirect_url=' + encodeURIComponent(window.location.href)">前往登入頁</button>`;
+    }
 
-  // 載入列表
-  fetch("https://hidden-mouse-2636.bmk4byvf9b.workers.dev/api/events")
-    .then(r => r.json())
-    .then(data => {
-      const container = document.getElementById("eventListContainer");
-      container.innerHTML = data.map(item => `
-        <div class="event-card">
-          <div class="event-body">
-            <div class="event-name">${item.name}</div>
-            <div class="event-footer">
-              <button class="btn-book" onclick="location.href='/book.html?id=${item.id}'">立即預訂</button>
-            </div>
-          </div>
-        </div>`).join('');
-    });
+    // 載入列表
+    fetch("https://hidden-mouse-2636.bmk4byvf9b.workers.dev/api/events")
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById("eventList").innerHTML = data.map(i => `<div>${i.name}</div>`).join('');
+        });
 };
 </script>
 </body>
