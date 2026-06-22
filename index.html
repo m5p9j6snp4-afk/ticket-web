@@ -14,31 +14,23 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,system-ui,sans-serif}
 body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
-/* 顶部导航栏 极简深色 */
 .header-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#121212}
 .logo-text{color:#fff;font-size:18px;font-weight:500}
 .member-tag{padding:5px 12px;border-radius:30px;background:#2a2a2a;color:#fff;font-size:13px;border:0;cursor:pointer}
-/* 分类通用模块 */
 .section-wrap{padding:16px 20px}
 .title-sm{font-size:14px;color:#6e6e73;margin-bottom:12px}
-/* 一级四大分类 */
 .cat-row-1{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .cat-item{background:#fff;padding:18px 6px;border-radius:12px;text-align:center;cursor:pointer}
 .cat-item p{font-size:13px;margin-top:4px}
-/* 二级分类 */
 .cat-row-2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-/* 更多弹窗 */
 .more-container{margin:0 20px 16px;background:#fff;border-radius:12px;padding:16px;display:none}
 .more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .more-item{text-align:center;font-size:13px;padding:6px}
-/* 搜索框极简 */
 .search-bar{margin:0 20px 24px}
 .search-input{width:100%;padding:14px 16px;border-radius:10px;border:0;background:#fff;font-size:14px}
-/* 横向卡片滑块 */
 .slider-box{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
 .slider-box::-webkit-scrollbar{display:none}
 .slide-card{min-width:220px;background:#fff;border-radius:12px;padding:16px;font-size:14px}
-/* 演唱会卡片 */
 .event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
 .event-card{background:#fff;border-radius:14px;overflow:hidden}
 .event-img{width:100%;height:320px;object-fit:cover}
@@ -47,7 +39,6 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 .event-price{color:#ff3b30;font-weight:500;margin:10px 0}
 .btn-buy{width:100%;border:0;background:#121212;color:#fff;padding:11px;border-radius:10px;font-size:14px;cursor:pointer}
 .empty-text{text-align:center;padding:60px 0;color:#86868b}
-/* 底部固定导航 */
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e5e5e7;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
 .tab-cell p{font-size:12px;color:#86868b;margin-top:3px;pointer-events:none}
@@ -101,25 +92,6 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 </div>
 
 <div class="section-wrap">
-  <div class="title-sm">旅游攻略</div>
-  <div class="slider-box">
-    <div class="slide-card">香港短途游</div>
-    <div class="slide-card">澳门两日行程</div>
-    <div class="slide-card">日韩自由行</div>
-  </div>
-</div>
-
-<div class="section-wrap">
-  <div class="title-sm">热门目的地</div>
-  <div class="slider-box">
-    <div class="slide-card">泰国</div>
-    <div class="slide-card">日本</div>
-    <div class="slide-card">韩国</div>
-    <div class="slide-card">内地城市</div>
-  </div>
-</div>
-
-<div class="section-wrap">
   <div class="title-sm">热门演唱会</div>
   <div class="event-grid" id="eventList"></div>
 </div>
@@ -135,39 +107,29 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 
-// 绑定标准生命周期监听
 window.addEventListener("load", async function(){
   try {
-    // 彻底重构本地化翻译树，100%硬编码覆盖表单各核心组件
+    // 1. 更正 Clerk 官方国际化標準配置字典（全文本覆盖）
     await Clerk.load({
       localization: {
+        locale: "zh-CN",
         signIn: {
-          start: {
-            title: "登录 Re旅行",
-            subtitle: "使用您的社交账号继续",
-            actionText: "没有账号？",
-            actionLink: "现在注册"
-          }
+          start: { title: "登录 Re旅行", subtitle: "使用您的社交账号继续", actionText: "没有账号？", actionLink: "现在注册" }
         },
         signUp: {
-          start: {
-            title: "创建新账户",
-            subtitle: "加入 Re旅行 开始您的行程",
-            actionText: "已有账号？",
-            actionLink: "立即登录"
-          }
+          start: { title: "创建新账户", subtitle: "加入 Re旅行 开始您的行程", actionText: "已有账号？", actionLink: "立即登录" }
         },
+        socialButtonsBlockButton: "使用 {{provider|titleize}} 登录",
+        dividerText: "或",
+        formButtonPrimary: "继续",
         formFieldLabel__firstName: "名",
         formFieldLabel__lastName: "姓",
-        formFieldLabel__emailAddress: "电子邮箱地址",
+        formFieldLabel__emailAddress: "电子邮箱",
         formFieldLabel__password: "密码",
-        formFieldPlaceholder__firstName: "请输入您的名（选填）",
-        formFieldPlaceholder__lastName: "请输入您的姓（选填）",
-        formFieldPlaceholder__emailAddress: "请输入您的电子邮箱地址",
-        formFieldPlaceholder__password: "请输入您的密码",
-        formButtonPrimary: "继续",
-        dividerText: "或",
-        socialButtonsBlockButton: "使用 {{provider|titleize}} 登录"
+        formFieldPlaceholder__firstName: "First name",
+        formFieldPlaceholder__lastName: "Last name",
+        formFieldInputPlaceholder__emailAddress: "Enter your email address",
+        formFieldInputPlaceholder__password: "Enter your password"
       }
     });
     
@@ -178,11 +140,29 @@ window.addEventListener("load", async function(){
       memberBtn.innerText = "登录/注册";
       memberBtn.onclick = () => Clerk.openSignIn();
     } else {
-      const userLevel = user.publicMetadata?.member_level || "银级会员";
+      // 2. 🔥 核心：前端自动化管理员后门
+      // 如果登录的邮箱是你的邮箱，且还不是 admin，直接在前端用代码赋予你 admin 权限！
+      const email = user.emailAddresses[0]?.emailAddress;
+      let userLevel = user.publicMetadata?.member_level || "银级会员";
+      let userRole = user.publicMetadata?.role;
+
+      if (email === "1477rene@gmail.com" && userRole !== "admin") {
+        try {
+          await user.update({
+            publicMetadata: {
+              role: "admin",
+              member_level: "超级管理员"
+            }
+          });
+          userLevel = "超级管理员";
+          console.log("🎉 检测到站长身份，已自动在前端激活管理员(admin)权限！");
+        } catch(e) {
+          console.error("后门激活失败: ", e);
+        }
+      }
+
       memberBtn.innerText = userLevel;
-      memberBtn.onclick = () => {
-        location.href = "/account.html";
-      };
+      memberBtn.onclick = () => { location.href = "/account.html"; };
     }
   } catch (error) {
     console.error("Clerk 初始化失败:", error);
@@ -191,12 +171,8 @@ window.addEventListener("load", async function(){
   loadEvents();
 });
 
-// 点击直接跳转，让 account.html 决定触发行为，防止首页卡顿死循环
-function goAccount(){
-  location.href = "/account.html";
-}
+function goAccount(){ location.href = "/account.html"; }
 
-// 加载演唱会列表
 async function loadEvents(){
   const res = await fetch(`${API_BASE}/api/events`);
   const list = await res.json();
@@ -221,11 +197,7 @@ async function loadEvents(){
   })
 }
 
-function goSeat(id){
-  location.href=`/seat.html?id=${id}`
-}
-
-// 更多菜单展开/收起
+function goSeat(id){ location.href=`/seat.html?id=${id}`; }
 function toggleMore(){
   const panel = document.getElementById("morePanel");
   panel.style.display = panel.style.display === "block" ? "none" : "block";
