@@ -2,180 +2,157 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>发布演唱会 | Re旅行商家后台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>發布新演唱會 | Re旅行商家後台</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa;padding-bottom:70px}
-nav{background:#0a0e17;padding:14px 16px}
-nav a{color:#fff;text-decoration:none}
-.container{max-width:620px;margin:30px auto;padding:0 14px}
-.page-title{text-align:center;font-size:22px;margin-bottom:28px}
-.upload-box{border:2px dashed #6366f1;border-radius:12px;padding:40px 16px;text-align:center;color:#6366f1;margin-bottom:20px;cursor:pointer}
-.preview{max-width:100%;max-height:240px;border-radius:10px;display:none;margin:10px 0}
-.form-item{margin:20px 0}
-label{display:block;margin-bottom:8px;font-weight:500}
-input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:15px}
-.btn-save{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;cursor:pointer;margin-top:20px}
-.no-perm{text-align:center;margin-top:80px;color:#ef4444;font-size:18px}
-/* 票价分区样式 */
-.price-zone-row{display:flex;gap:10px;margin-bottom:10px}
-.price-zone-row input{flex:1}
-.btn-add-zone{background:#e0e7ff;color:#4f46e5;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;margin-bottom:15px}
-.btn-del-zone{background:#fee2e2;color:#ef4444;border:none;padding:0 12px;border-radius:8px;cursor:pointer}
-/* 底部导航 */
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
-.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
-.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
-.tab-cell.active p{color:#111;font-weight:500}
+body{background:#f7f8fa;padding-bottom:100px;color:#333}
+nav{background:#0a0e17;padding:16px;color:#fff;display:flex;justify-content:space-between;align-items:center}
+nav a{color:#fff;text-decoration:none;font-size:14px}
+.container{max-width:600px;margin:20px auto;padding:0 16px}
+h2{font-size:20px;font-weight:600;margin-bottom:20px;color:#1e293b}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#475569}
+.form-group input, .form-group select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;background:#fff}
+
+/* 分區票價樣式 */
+.zone-row{display:flex;gap:10px;margin-bottom:10px;align-items:center}
+.zone-row input{flex:1}
+.btn-remove-zone{background:#ef4444;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
+.btn-add-zone{background:#e2e8f0;color:#334155;border:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:16px}
+
+.btn-submit{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,0.2);margin-top:10px}
+
+/* 底部導航 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e2e8f0;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#64748b;margin-top:4px;pointer-events:none}
+.tab-cell.active p{color:#0f172a;font-weight:600}
 </style>
 </head>
 <body>
-<nav><a href="/">← 返回首页</a></nav>
-<div class="container" id="permWrap" style="display:none">
-  <div class="no-perm">当前账号无管理员发布权限</div>
-</div>
-<div class="container" id="formWrap" style="display:none">
-  <h2 class="page-title">发布新演唱会</h2>
+
+<nav>
+  <a href="/">← 返回首頁</a>
+  <span>商家工作台</span>
+</nav>
+
+<div class="container">
+  <h2>發布全新熱門演唱會</h2>
   
-  <div class="upload-box" onclick="document.getElementById('imgFile').click()">
-    <p>点击上传演唱会海报（相册选择）</p>
-  </div>
-  <input type="file" id="imgFile" accept="image/*" style="display:none">
-  <img class="preview" id="imgPreview">
-  <p id="uploadTip" style="font-size:14px;color:#666;margin-bottom:15px;"></p>
-
-  <div class="form-item">
-    <label>演出名称</label>
-    <input type="text" id="eventName" placeholder="例如：陈奕迅 香港红馆演唱会">
-  </div>
-  <div class="form-item">
-    <label>演出日期</label>
-    <input type="date" id="eventDate">
+  <div class="form-group">
+    <label>演唱會/活動名稱</label>
+    <input type="text" id="eventName" placeholder="例如：周杰倫 2026 世界巡迴演唱會 - 香港站">
   </div>
 
-  <!-- 🌟 新增：多票价分区设置 -->
-  <div class="form-item">
-    <label>座位区域与对应票价</label>
-    <div id="zoneContainer">
-      <div class="price-zone-row">
-        <input type="text" class="zone-name" placeholder="区域（如：1A）">
-        <input type="number" class="zone-price" placeholder="价格 HK$（如：1380）">
-        <button class="btn-del-zone" onclick="this.parentElement.remove()">X</button>
+  <div class="form-group">
+    <label>演出日期與時間</label>
+    <input type="text" id="eventDate" placeholder="例如：2026年11月20日 20:00">
+  </div>
+
+  <div class="form-group">
+    <label>海報圖片網址 (Image URL)</label>
+    <input type="text" id="eventPoster" placeholder="請貼上圖片連結">
+  </div>
+
+  <div class="form-group">
+    <label>起步票價 (HK$)</label>
+    <input type="number" id="eventPrice" placeholder="最低起步價，例如：780">
+  </div>
+
+  <div class="form-group">
+    <label style="font-weight: 600; color: #1e293b;">配置座位分區與具體票價</label>
+    <div id="zonesContainer">
+      <div class="zone-row">
+        <input type="text" class="zone-name" placeholder="分區名稱 (如: 內場A區)">
+        <input type="number" class="zone-price" placeholder="價格 (如: 1380)">
+      </div>
+      <div class="zone-row">
+        <input type="text" class="zone-name" placeholder="分區名稱 (如: 看台B區)">
+        <input type="number" class="zone-price" placeholder="價格 (如: 980)">
       </div>
     </div>
-    <button class="btn-add-zone" onclick="addZoneField()">+ 添加座位区域/票价</button>
+    <button type="button" class="btn-add-zone" onclick="addZoneField()">＋ 增加一個座位分區</button>
   </div>
 
-  <button class="btn-save" onclick="submitAdd()">保存发布</button>
+  <button class="btn-submit" onclick="submitEvent()">確認發布並同步到首頁</button>
 </div>
 
 <div class="bottom-tab">
-  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
-  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
-  <div class="tab-cell active"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='/'"><p>首頁</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>訊息</p></div>
+  <div class="tab-cell active"><p>發布</p></div>
   <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell" onclick="location.href='/account.html'"><p>账户</p></div>
+  <div class="tab-cell" onclick="location.href='/account.html'"><p>帳戶</p></div>
 </div>
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-const clerk = new Clerk(CLERK_PUB_KEY);
-let posterUrl = "";
-let adminPassword = "Rene 12345678"; 
+let adminPwd = "Rene 12345678";
 
-window.onload = async function(){
-  await clerk.load({ localization: { locale: "zh-CN", signIn: { start: { title: "登录 Re旅行" } } } });
-  const user = clerk.user;
-  if(!user){
-    alert("请先登录账号");
-    clerk.openSignIn({ afterSignInUrl: window.location.href });
-    return;
-  }
-  
-  const email = user.emailAddresses[0]?.emailAddress;
-  const meta = user.publicMetadata || {};
-
-  if (email === "1477rene@gmail.com" || meta.role === "admin") {
-    document.getElementById("formWrap").style.display = "block";
-    document.getElementById("permWrap").style.display = "none";
-  } else {
-    document.getElementById("permWrap").style.display = "block";
-    document.getElementById("formWrap").style.display = "none";
-  }
-}
-
-// 动态添加区域输入框
+// 動態增加分區輸入框
 function addZoneField() {
-  const container = document.getElementById("zoneContainer");
+  const container = document.getElementById("zonesContainer");
   const div = document.createElement("div");
-  div.className = "price-zone-row";
+  div.className = "zone-row";
   div.innerHTML = `
-    <input type="text" class="zone-name" placeholder="区域（如：3F）">
-    <input type="number" class="zone-price" placeholder="价格 HK$（如：780）">
-    <button class="btn-del-zone" onclick="this.parentElement.remove()">X</button>
+    <input type="text" class="zone-name" placeholder="分區名稱">
+    <input type="number" class="zone-price" placeholder="價格">
+    <button type="button" class="btn-remove-zone" onclick="this.parentElement.remove()">刪除</button>
   `;
   container.appendChild(div);
 }
 
-// 上传图片
-document.getElementById("imgFile").onchange = async function(e){
-  const file = e.target.files[0]; if(!file) return;
-  document.getElementById("uploadTip").innerText = "图片上传中...";
-  const formData = new FormData(); formData.append("file", file);
-  try{
-    const res = await fetch("https://telegra.ph/upload", {method:"POST", body:formData});
-    const json = await res.json();
-    posterUrl = "https://telegra.ph" + json[0].src;
-    document.getElementById("imgPreview").src = posterUrl;
-    document.getElementById("imgPreview").style.display = "block";
-    document.getElementById("uploadTip").innerText = "海报上传完成";
-  }catch(err){ document.getElementById("uploadTip").innerText = "上传失败"; }
-}
-
-// 提交发布
-async function submitAdd(){
+// 提交數據到後端 Worker
+async function submitEvent() {
   const name = document.getElementById("eventName").value.trim();
-  const date = document.getElementById("eventDate").value;
-  
-  // 收集所有分区票价数据
-  const zoneRows = document.querySelectorAll(".price-zone-row");
-  let zones = [];
-  let basePrice = 0; // 取填写的第一个价格作为基础显示票价
-  
-  zoneRows.forEach((row, index) => {
-    const zName = row.querySelector(".zone-name").value.trim();
-    const zPrice = Number(row.querySelector(".zone-price").value);
-    if(zName && zPrice) {
-      zones.push({ name: zName, price: zPrice });
-      if(index === 0) basePrice = zPrice;
-    }
-  });
+  const date = document.getElementById("eventDate").value.trim();
+  const poster = document.getElementById("eventPoster").value.trim();
+  const price = document.getElementById("eventPrice").value.trim();
 
-  if(!name || !date || zones.length === 0){
-    alert("请完整填写演出名称、日期并至少添加一个座位票价区域");
+  if (!name || !date || !price) {
+    alert("請至少填寫活動名稱、日期與起步票價！");
     return;
   }
-  
-  const res = await fetch(`${API_BASE}/api/admin/add-event?pwd=${encodeURIComponent(adminPassword)}`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      name,
-      date,
-      price: basePrice, // 兼容旧版的基础票价
-      zones: zones,     // 新增的多分区数据傳給後端
-      poster: posterUrl
-    })
-  });
-  const data = await res.json();
-  if(data.success){
-    alert("演唱会发布成功！");
-    location.href = "/";
-  } else {
-    alert(data.msg || "发布失败");
+
+  // 收集分區票價陣列
+  const zoneNames = document.querySelectorAll(".zone-name");
+  const zonePrices = document.querySelectorAll(".zone-price");
+  let zones = [];
+
+  for (let i = 0; i < zoneNames.length; i++) {
+    const zName = zoneNames[i].value.trim();
+    const zPrice = zonePrices[i].value.trim();
+    if (zName && zPrice) {
+      zones.push({ name: zName, price: Number(zPrice) });
+    }
+  }
+
+  const payload = {
+    pwd: adminPwd,
+    name,
+    date,
+    poster,
+    price: Number(price),
+    zones: zones
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/add-event`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      alert("🎉 演唱會發布成功！已即時同步至系統首頁！");
+      location.href = "/";
+    } else {
+      const txt = await res.text();
+      alert("發布失敗：" + txt);
+    }
+  } catch (err) {
+    alert("網路錯誤，發布失敗");
   }
 }
 </script>
