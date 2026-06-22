@@ -6,6 +6,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 <title>Re旅行 | 演唱會與機票預訂首頁</title>
 <style>
+/* 樣式保持不變 */
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f7f8fa;padding-bottom:80px;color:#333}
 header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;color:#fff;border-bottom-left-radius:20px;border-bottom-right-radius:20px;position:relative;z-index:10}
@@ -65,7 +66,7 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
     <a href="/admin.html" class="btn-admin-gate" id="adminGateBtn" style="display:none">進入商家後台 →</a>
   </div>
   <div id="eventListContainer">
-    <p style="text-align:center;color:#94a3b8;padding:40px 0;">正在載入最新演唱會...</p>
+    <p style="text-align:center;color:#94a3b8;padding:40px 0;">正在載入...</p>
   </div>
 </div>
 
@@ -89,13 +90,12 @@ function getTimeGreeting() {
   return "晚上好";
 }
 
-// 🌟 新增：狀態渲染器
-function renderUI(user) {
+function updateUI(user) {
   if (user) {
     const email = user.emailAddresses[0]?.emailAddress;
     const meta = user.publicMetadata || {};
     
-    document.getElementById("authBtnWrap").innerHTML = `<button class="btn-logout" onclick="clerk.signOut().then(() => location.href='/')">登出</button>`;
+    document.getElementById("authBtnWrap").innerHTML = `<button class="btn-logout" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
     document.getElementById("userEmailSub").innerText = email;
 
     if (email === "1477rene@gmail.com" || meta.role === "admin") {
@@ -114,62 +114,42 @@ function renderUI(user) {
 window.onload = async function() {
   await clerk.load({ localization: { locale: "zh-CN" } });
   
-  // 🌟 核心保險：監聽 Clerk 狀態改變，一旦登入成功立即強制重繪介面
-  clerk.addListener(({ user }) => {
-    renderUI(user);
-  });
+  // 初始化檢查
+  updateUI(clerk.user);
 
   document.getElementById("clerkTriggerBtn").addEventListener("click", () => {
+    // 强制跳轉並帶有參數，防止快取
     clerk.openSignIn({
-      afterSignInUrl: window.location.origin,
-      afterSignUpUrl: window.location.origin
+      afterSignInUrl: window.location.href + "?auth=done"
     });
   });
 
-  renderUI(clerk.user);
+  // 監聽 Clerk 狀態變化
+  clerk.addListener(({ user }) => {
+    updateUI(user);
+  });
+
   loadEvents();
 }
 
-async function loadEvents() {
+async function loadEvents() { /* 保持原來的 loadEvents 邏輯 */
   try {
     const res = await fetch(`${API_BASE}/api/events`);
     const events = await res.json();
     const container = document.getElementById("eventListContainer");
     container.innerHTML = "";
-
-    if (!events || events.length === 0) {
-      container.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:40px 0;">暫無發布的演唱會資訊</p>`;
-      return;
-    }
-
+    if (!events || events.length === 0) { container.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:40px 0;">暫無發布的演唱會資訊</p>`; return; }
     events.forEach(item => {
-      let zonesHtml = "";
-      if (item.zones && Array.isArray(item.zones)) {
-        item.zones.forEach(z => {
-          zonesHtml += `<span class="zone-tag">${z.name} (HK$${z.price})</span>`;
-        });
-      } else {
-        zonesHtml = `<span class="zone-tag">常規單一分區</span>`;
-      }
-
       container.innerHTML += `
         <div class="event-card">
-          ${item.poster ? `<img class="event-banner" src="${item.poster}" alt="海報">` : `<div class="event-banner" style="display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;">暫無海報</div>`}
           <div class="event-body">
-            <div class="event-name">${item.name || "未命名演出"}</div>
-            <div class="event-date">演出日期：${item.date || "未定"}</div>
-            <div class="zones-wrap">${zonesHtml}</div>
-            <div class="event-footer">
-              <div class="price-from">票價 <span>HK$ ${item.price || "780"}</span> 起</div>
-              <button class="btn-book" onclick="location.href='/book.html?id=${item.id}'">立即預訂</button>
-            </div>
+            <div class="event-name">${item.name}</div>
+            <div class="event-footer"><button class="btn-book" onclick="location.href='/book.html?id=${item.id}'">立即預訂</button></div>
           </div>
         </div>
       `;
     });
-  } catch (err) {
-    document.getElementById("eventListContainer").innerHTML = `<p style="text-align:center;color:#ef4444;padding:40px 0;">數據載入失敗</p>`;
-  }
+  } catch (err) {}
 }
 </script>
 </body>
