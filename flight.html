@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>机票预订 | 星耀旅行</title>
+<!-- Clerk登录SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<title>机票预订 | Re旅行</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
 body{background:#f8f9fa;padding-bottom:70px}
@@ -15,11 +17,13 @@ body{background:#f8f9fa;padding-bottom:70px}
 .form-box{margin:0 20px}
 .form-item{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px}
 .form-item label{font-size:13px;color:#666;display:block;margin-bottom:6px}
-select,input{width:100%;padding:12px;border:1px solid #eee;border-radius:10px;font-size:15px}
-.btn-search{width:100%;margin-top:20px;padding:14px;background:#111;color:#fff;border:0;border-radius:12px;font-size:16px}
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee}
-.tab{flex:1;text-align:center;padding:10px 0}
-.tab p{font-size:12px;color:#777;margin-top:3px}
+select,input{width:100%;padding:12px;border:1px solid #eee;border-radius:10px;font-size:15px;cursor:pointer}
+.btn-search{width:100%;margin-top:20px;padding:14px;background:#111;color:#fff;border:0;border-radius:12px;font-size:16px;cursor:pointer}
+/* 底部导航统一样式 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
+.tab.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
@@ -65,36 +69,31 @@ select,input{width:100%;padding:12px;border:1px solid #eee;border-radius:10px;fo
   <button class="btn-search" onclick="searchFlight()">查询航班</button>
 </div>
 
+<!-- 全站统一可点击底部导航 -->
 <div class="bottom-tab">
-  <div class="tab"><p>首页</p></div>
-  <div class="tab"><p>讯息</p></div>
-  <div class="tab"><p>发布</p></div>
-  <div class="tab"><p>我的行程</p></div>
-  <div class="tab"><p>账户</p></div>
+  <div class="tab" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab" onclick="location.href='/mine.html'"><p>我的行程</p></div>
+  <div class="tab" onclick="location.href='/account.html'"><p>账户</p></div>
 </div>
 
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
+const clerk = new Clerk(CLERK_PUB_KEY);
 let tripType = "one";
 
-// 登录校验
-async function checkLogin(){
-  const token = localStorage.getItem("userToken");
-  if(!token){
-    location.href="/login.html";
-    return false;
-  }
-  const res = await fetch(`${API_BASE}/api/user/info`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({token})
-  });
-  const d = await res.json();
-  if(d.code!==200){
-    localStorage.clear();
-    location.href="/login.html";
+// 页面初始化 Clerk登录校验
+window.onload = async function(){
+  await clerk.load();
+  const user = clerk.user;
+  if(!user){
+    alert("请先登录账号后预订机票");
+    location.href="/";
+    return;
   }
 }
-checkLogin();
 
 // 切换单程/往返
 function setTripType(type){
@@ -121,7 +120,7 @@ function searchFlight(){
   let msg = `行程类型：${tripType==="one"?"单程":"往返"}\n出发：${depart}\n目的地：${arrive}\n出发日：${go}`;
   if(tripType==="round") msg += `\n返程日：${document.getElementById("backDate").value}`;
   alert(msg);
-  // 跳转航班列表/下单页 flight-buy.html
+  // 跳转航班下单页 flight-buy.html
 }
 </script>
 </body>
