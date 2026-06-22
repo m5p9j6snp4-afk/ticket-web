@@ -20,7 +20,7 @@ nav a{color:#fff;text-decoration:none}
 .badge-zone{display:inline-block;background:#e0e7ff;color:#4f46e5;padding:3px 8px;border-radius:6px;font-size:13px;font-weight:bold;margin-bottom:8px}
 .btn-ok{background:#16a34a;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
 .btn-no{background:#ef4444;color:#fff;border:none;padding:9px 14px;border-radius:8px;margin:4px;cursor:pointer}
-.btn-relogin{background:#4f46e5;color:#fff;border:none;padding:12px 24px;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 4px 10px rgba(79,70,229,0.3)}
+.btn-relogin{background:#4f46e5;color:#fff;border:none;padding:12px 24px;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600}
 h3{margin-top:40px;margin-bottom:16px;color:#222}
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
@@ -38,7 +38,7 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
   <div class="no-perm-box">
     <h2 id="errTitle">未偵測到管理員登入</h2>
     <p id="errDesc">請點擊下方按鈕重新完成管理員帳號驗證</p>
-    <button class="btn-relogin" id="adminLoginTrigger">立即驗證管理員身份</button>
+    <button class="btn-relogin" id="adminLoginTrigger">立即验证管理员身份</button>
   </div>
 </div>
 
@@ -61,144 +61,76 @@ h3{margin-top:40px;margin-bottom:16px;color:#222}
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
-let adminPwd = "Rene 12345678"; 
+const adminPwd = "Rene 12345678"; 
 
-function getGreetingWord() {
-  const hr = new Date().getHours();
-  if (hr >= 5 && hr < 12) return "早上好";
-  if (hr >= 12 && hr < 18) return "下午好";
-  return "晚上好";
-}
-
-function checkUserStatus(user) {
+async function checkUserStatus(user) {
   if(!user){
-    document.getElementById("adminGreeting").innerText = "未登入";
     document.getElementById("noPermWrap").style.display = "block";
-    document.getElementById("adminWrap").style.display = "none";
     return;
   }
   const email = user.emailAddresses[0]?.emailAddress;
-  const meta = user.publicMetadata || {};
-
-  if (meta.role === "admin" || email === "1477rene@gmail.com") {
+  if (email === "1477rene@gmail.com") {
     document.getElementById("adminWrap").style.display = "block";
     document.getElementById("noPermWrap").style.display = "none";
-    document.getElementById("adminGreeting").innerText = `${getGreetingWord()}，管理员 Rene`;
+    document.getElementById("adminGreeting").innerText = `你好，管理员 Rene`;
     renderLoader();
   } else {
-    document.getElementById("adminGreeting").innerText = "权限不足";
-    document.getElementById("errTitle").innerText = "无管理员访问权限";
-    document.getElementById("errDesc").innerText = `当前登录账号 (${email}) 非后台管理员`;
+    document.getElementById("errTitle").innerText = "无权限";
     document.getElementById("noPermWrap").style.display = "block";
-    document.getElementById("adminWrap").style.display = "none";
   }
 }
 
-window.onload = async function(){
-  await clerk.load({ localization: { locale: "zh-CN" } });
-
-  // 監聽狀態改變
-  clerk.addListener(({ user }) => {
-    checkUserStatus(user);
-  });
-
-  document.getElementById("adminLoginTrigger").addEventListener("click", () => {
-    clerk.openSignIn({ afterSignInUrl: window.location.href });
-  });
-
+window.onload = async () => {
+  await clerk.load();
   checkUserStatus(clerk.user);
+  document.getElementById("adminLoginTrigger").onclick = () => clerk.openSignIn();
 }
 
 async function renderLoader() {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/list?pwd=${encodeURIComponent(adminPwd)}`);
-    const data = await res.json();
-    renderOrders(data);
-    loadFlightOrders();
-  } catch(err) {
-    console.error(err);
-  }
+  // 加载演唱会订单
+  const res = await fetch(`${API_BASE}/api/admin/list?pwd=${encodeURIComponent(adminPwd)}`);
+  const list = await res.json();
+  const wrap = document.getElementById("orderList");
+  wrap.innerHTML = list.map(item => `
+    <div class="order-card">
+      <h4>${item.event_name}</h4>
+      <p>订单号: ${item.order_no}</p>
+      <p>状态: ${item.status}</p>
+      ${(item.status=="checking" || item.status=="unpaid") ? `
+        <button class="btn-ok" onclick="updateStatus('concert', '${item.order_no}', 'paid')">确认收款</button>
+        <button class="btn-no" onclick="updateStatus('concert', '${item.order_no}', 'reject')">驳回</button>
+      `:""}
+    </div>
+  `).join('');
+
+  // 加载机票订单
+  const resF = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${encodeURIComponent(adminPwd)}`);
+  const listF = await resF.json();
+  const wrapF = document.getElementById("flightOrderList");
+  wrapF.innerHTML = listF.map(item => `
+    <div class="order-card">
+      <h4>${item.airline} - ${item.route}</h4>
+      <p>订单号: ${item.order_no}</p>
+      <p>状态: ${item.status}</p>
+      ${(item.status=="checking" || item.status=="unpaid") ? `
+        <button class="btn-ok" onclick="updateStatus('flight', '${item.order_no}', 'paid')">确认收款</button>
+        <button class="btn-no" onclick="updateStatus('flight', '${item.order_no}', 'reject')">驳回</button>
+      `:""}
+    </div>
+  `).join('');
 }
 
-function renderOrders(list){
-  const wrap = document.getElementById("orderList"); wrap.innerHTML="";
-  if(!list || list.length===0){wrap.innerHTML="<p>暂无演唱会订单</p>";return;}
-  list.forEach(item=>{
-    const currentNo = item.order_no || item.orderNo || "";
-    const seatZone = item.zone || item.seat_zone || "未指定区域";
-    wrap.innerHTML += `
-      <div class="order-card">
-        <h4>${item.event_name || "未知演出"}</h4>
-        <div class="badge-zone">已选位置/区域: ${seatZone}</div>
-        <p>订单号：${currentNo}</p>
-        <p>价格金额：HK$ ${item.price || "0"}</p>
-        <p>购票人：${item.username || "游客"} ${item.contact || ""}</p>
-        <p>当前状态：${item.status || "未知"}</p>
-        ${item.pay_img ? `<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a></p>`:"<p>未上传凭证</p>"}
-        ${item.status=="checking" || item.status=="unpaid" ? `
-          <button class="btn-ok" onclick="setPaid('${currentNo}')">确认收款</button>
-          <button class="btn-no" onclick="setReject('${currentNo}')">驳回订单</button>
-        `:""}
-      </div>
-    `;
+// 统一更新状态函数
+async function updateStatus(type, orderNo, status) {
+  if(!confirm("确认执行此操作吗？")) return;
+  const endpoint = type === 'concert' ? 'set-status' : 'flight-set-status';
+  await fetch(`${API_BASE}/api/admin/${endpoint}`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ pwd: adminPwd, orderNo, status })
   });
-}
-
-async function setPaid(orderNo){
-  await fetch(`${API_BASE}/api/admin/set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo,status:"paid"})
-  });
-  alert("操作成功");location.reload();
-}
-
-async function setReject(orderNo){
-  await fetch(`${API_BASE}/api/admin/set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo,status:"reject"})
-  });
-  alert("已驳回订单");location.reload();
-}
-
-async function loadFlightOrders(){
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/flight-list?pwd=${encodeURIComponent(adminPwd)}`);
-    const list = await res.json();
-    const wrap = document.getElementById("flightOrderList"); wrap.innerHTML="";
-    if(!list || list.length===0){wrap.innerHTML="<p>暂无机票订单</p>";return;}
-    list.forEach(item=>{
-      let statusText = item.status=="unpaid"?"未上传凭证":item.status=="checking"?"待核验":item.status=="paid"?"已确认":"已驳回";
-      const currentNo = item.order_no || item.orderNo || "";
-      wrap.innerHTML += `
-        <div class="order-card">
-          <h4>${item.airline || "未命名航班"} ${item.route || ""}</h4>
-          <p>机票订单号：${currentNo}</p>
-          <p>订单状态：${statusText}</p>
-          ${item.pay_img?`<p>付款凭证：<a href="${item.pay_img}" target="_blank">查看截图</a>`:"<p>未上传转账凭证</p>"}
-          ${item.status=="checking" || item.status=="unpaid"? `
-            <button class="btn-ok" onclick="flightPaid('${currentNo}')">确认收款</button>
-            <button class="btn-no" onclick="flightReject('${currentNo}')">驳回订单</button>
-          `:""}
-        </div>
-      `;
-    });
-  } catch(e) {}
-}
-
-async function flightPaid(no){
-  await fetch(`${API_BASE}/api/admin/flight-set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"paid"})
-  });
-  alert("机票訂單確認成功");location.reload();
-}
-
-async function flightReject(no){
-  await fetch(`${API_BASE}/api/admin/flight-set-status`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({pwd:adminPwd,orderNo:no,status:"reject"})
-  });
-  alert("機票訂單已駁回");location.reload();
+  alert("操作成功");
+  location.reload();
 }
 </script>
 </body>
