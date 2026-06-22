@@ -13,21 +13,15 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
 .user-info{flex:1;padding-right:10px}
 .user-info h2{font-size:20px;font-weight:600}
 .user-info p{font-size:13px;color:#94a3b8;margin-top:2px}
-
 .auth-box{position:relative;z-index:9999 !important}
-.btn-login{background:#fff;color:#0f172a;border:none;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.15);-webkit-tap-highlight-color:transparent}
+.btn-login{background:#fff;color:#0f172a;border:none;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.15)}
 .btn-logout{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer}
-
-/* 數據看板 */
-.dashboard-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:14px;padding:16px;display:flex;justify-content:space-between;margin-top:10px;transition:all 0.3s ease}
+.dashboard-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:14px;padding:16px;display:flex;justify-content:space-between;margin-top:10px}
 .db-item text{display:block;font-size:12px;color:#94a3b8}
 .db-item number{display:block;font-size:18px;font-weight:bold;color:#fff;margin-top:4px}
-
 .container{max-width:620px;margin:24px auto;padding:0 14px;position:relative;z-index:1}
 .section-title{font-size:18px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
 .btn-admin-gate{font-size:13px;color:#4f46e5;text-decoration:none;font-weight:500}
-
-/* 演唱會卡片 */
 .event-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.03);margin-bottom:20px;display:flex;flex-direction:column}
 .event-banner{width:100%;height:200px;object-fit:cover;background:#e2e8f0}
 .event-body{padding:16px}
@@ -39,8 +33,6 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
 .price-from{font-size:13px;color:#64748b}
 .price-from span{font-size:20px;font-weight:bold;color:#ef4444}
 .btn-book{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer}
-
-/* 底部導航 */
 .bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e2e8f0;z-index:999}
 .tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
 .tab-cell p{font-size:12px;color:#64748b;margin-top:4px;pointer-events:none}
@@ -61,18 +53,9 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
   </div>
 
   <div class="dashboard-card" id="userSpendDashboard">
-    <div class="db-item">
-      <text>累計消費額</text>
-      <number>HK$ 0.00</number>
-    </div>
-    <div class="db-item">
-      <text>進行中行程</text>
-      <number>0 個</number>
-    </div>
-    <div class="db-item">
-      <text>會員積分</text>
-      <number>0 P</number>
-    </div>
+    <div class="db-item"><text>累計消費額</text><number>HK$ 0.00</number></div>
+    <div class="db-item"><text>進行中行程</text><number>0 個</number></div>
+    <div class="db-item"><text>會員積分</text><number>0 P</number></div>
   </div>
 </header>
 
@@ -81,7 +64,6 @@ header{background:linear-gradient(135deg,#0a0e17,#1e293b);padding:24px 16px;colo
     <span>熱門演唱會預訂</span>
     <a href="/admin.html" class="btn-admin-gate" id="adminGateBtn" style="display:none">進入商家後台 →</a>
   </div>
-
   <div id="eventListContainer">
     <p style="text-align:center;color:#94a3b8;padding:40px 0;">正在載入最新演唱會...</p>
   </div>
@@ -107,48 +89,44 @@ function getTimeGreeting() {
   return "晚上好";
 }
 
-window.onload = async function() {
-  // 初始化 Clerk 并加入强制跳转同步配置
-  await clerk.load({ 
-    localization: { locale: "zh-CN" }
-  });
-  
-  // 監聽按鈕點擊
-  document.getElementById("clerkTriggerBtn").addEventListener("click", () => {
-    clerk.openSignIn({
-      afterSignInUrl: window.location.origin + "?auth=success", // 登入成功後強制帶參數返回，刷新快取
-      afterSignUpUrl: window.location.origin
-    });
-  });
-
-  const user = clerk.user;
+// 🌟 新增：狀態渲染器
+function renderUI(user) {
   if (user) {
     const email = user.emailAddresses[0]?.emailAddress;
     const meta = user.publicMetadata || {};
     
-    // 🌟 1. 既然登入成功了，立刻把右邊的大按鈕換成不顯眼的「登出」小標籤
     document.getElementById("authBtnWrap").innerHTML = `<button class="btn-logout" onclick="clerk.signOut().then(() => location.href='/')">登出</button>`;
     document.getElementById("userEmailSub").innerText = email;
 
-    // 🌟 2. 核心判斷：如果是管理員 Rene
     if (email === "1477rene@gmail.com" || meta.role === "admin") {
-      // 變成下午好，管理員 Rene，蓋掉原本的提示！
       document.getElementById("welcomeGreeting").innerText = `${getTimeGreeting()}，管理員 Rene`;
-      // 徹底隱藏消費看板，不顯示零元
       document.getElementById("userSpendDashboard").style.display = "none";
-      // 開啟快捷通道
       document.getElementById("adminGateBtn").style.display = "block";
     } else {
-      // 普通用戶登入
-      const nickname = user.firstName || user.username || "旅客";
-      document.getElementById("welcomeGreeting").innerText = `${getTimeGreeting()}，${nickname}`;
+      document.getElementById("welcomeGreeting").innerText = `${getTimeGreeting()}，${user.firstName || '旅客'}`;
     }
   } else {
-    // 沒登入時，確保看板和按鈕是原始狀態
     document.getElementById("welcomeGreeting").innerText = "你好，歡迎來到 Re旅行";
     document.getElementById("userSpendDashboard").style.display = "flex";
   }
+}
 
+window.onload = async function() {
+  await clerk.load({ localization: { locale: "zh-CN" } });
+  
+  // 🌟 核心保險：監聽 Clerk 狀態改變，一旦登入成功立即強制重繪介面
+  clerk.addListener(({ user }) => {
+    renderUI(user);
+  });
+
+  document.getElementById("clerkTriggerBtn").addEventListener("click", () => {
+    clerk.openSignIn({
+      afterSignInUrl: window.location.origin,
+      afterSignUpUrl: window.location.origin
+    });
+  });
+
+  renderUI(clerk.user);
   loadEvents();
 }
 
