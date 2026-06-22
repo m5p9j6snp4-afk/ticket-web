@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- 禁用页面缓存，解决Cloudflare Pages缓存干扰 -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 <title>Re旅行 | 演唱會預訂</title>
 <style>
@@ -27,31 +31,35 @@
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
 const clerk = new Clerk(CLERK_PUB_KEY);
 
-async function init() {
-    await clerk.load({ localization: { locale: "zh-HK" } });
-    
-    // 檢查登入狀態
+// 更新頁面登入UI抽成獨立函數，方便重複調用
+function renderAuthUI() {
+    const greeting = document.getElementById("welcomeGreeting");
+    const authBox = document.getElementById("authArea");
+
     if (clerk.user) {
         const email = clerk.user.emailAddresses[0].emailAddress;
-        document.getElementById("welcomeGreeting").innerText = 
-            (email === "1477rene@gmail.com") ? "下午好，管理員 Rene" : "歡迎回來";
-        document.getElementById("authArea").innerHTML = 
-            `<button class="btn" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
+        greeting.innerText = email === "1477rene@gmail.com" ? "下午好，管理員 Rene" : "歡迎回來";
+        authBox.innerHTML = `<button class="btn" onclick="clerk.signOut().then(() => location.reload())">登出</button>`;
     } else {
-        document.getElementById("welcomeGreeting").innerText = "你好，歡迎來到 Re旅行";
-        // 使用 Clerk 標準 API 獲取跳轉網址，這比手動拼接字串安全且正確
+        greeting.innerText = "你好，歡迎來到 Re旅行";
         const signInUrl = clerk.buildSignInUrl();
-        document.getElementById("authArea").innerHTML = 
-            `<button class="btn" onclick="window.location.href='${signInUrl}'">前往登入</button>`;
+        authBox.innerHTML = `<button class="btn" onclick="window.location.href='${signInUrl}'">前往登入</button>`;
     }
-
-    // 載入演唱會列表 (加入錯誤重試)
-    fetchEvents();
 }
 
+// 載入演唱會列表，攜帶登入Token給Workers
 async function fetchEvents(retryCount = 0) {
     try {
-        const response = await fetch("https://hidden-mouse-2636.bmk4byvf9b.workers.dev/api/events");
+        const headers = {
+            "Content-Type": "application/json"
+        };
+        // 有登入會話則攜帶授權Token
+        if(clerk.session) {
+            const token = await clerk.session.getToken();
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await fetch("https://hidden-mouse-2636.bmk4byvf9b.workers.dev/api/events", { headers });
         if (!response.ok) throw new Error("API 錯誤");
         const data = await response.json();
         document.getElementById("eventList").innerHTML = data.map(i => 
@@ -66,7 +74,25 @@ async function fetchEvents(retryCount = 0) {
     }
 }
 
-window.onload = init;
+// 優化：立即執行初始化，不等待window.onload
+async function init() {
+    await clerk.load({ localization: { locale: "zh-HK" } });
+    
+    // 監聽登入狀態變化，登錄/登出自動刷新UI
+    clerk.addListener((ev) => {
+        if(ev.type === "session") {
+            renderAuthUI();
+            fetchEvents();
+        }
+    })
+
+    // 初次渲染登入狀態
+    renderAuthUI();
+    fetchEvents();
+}
+
+// 直接執行，放棄window.onload延遲初始化
+init();
 </script>
 </body>
 </html>
