@@ -3,49 +3,116 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>我的帳戶 | Re旅行</title>
+<script 
+  async 
+  crossorigin="anonymous" 
+  data-clerk-publishable-key="pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ" 
+  src="https://top-ant-1.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js" 
+  type="text/javascript">
+</script>
+<title>账户 | Re旅行</title>
 <style>
-    body{font-family:system-ui;padding:20px;background:#f7f8fa;display:flex;justify-content:center}
-    .card{background:#fff;padding:30px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);text-align:center;width:100%;max-width:400px}
-    .btn{display:block;width:100%;padding:15px;margin-top:20px;border-radius:12px;border:none;background:#0f172a;color:#fff;font-weight:bold;cursor:pointer;font-size:16px}
-    .status-text{color:#64748b;margin-bottom:10px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#f7f8fa;padding-bottom:70px}
+.back{padding:16px 20px}
+.back a{text-decoration:none;color:#111;font-size:16px}
+.load-box{margin:20px;border-radius:16px;background:#111;color:#fff;padding:30px 20px}
+.load-box h3{font-size:24px;margin-bottom:12px}
+.load-box p{font-size:15px;color:#ccc;margin:6px 0}
+.item-box{background:#fff;margin:12px 20px;border-radius:12px;padding:18px;display:flex;justify-content:space-between;align-items:center}
+.item-box p:first-child{font-size:15px;color:#222}
+.item-box p:last-child{color:#888}
+.logout-btn{margin:30px 20px;padding:16px;width:calc(100% - 40px);border:2px solid #ff3b30;color:#ff3b30;background:#fff;border-radius:12px;font-size:16px;cursor:pointer}
+/* 底部导航统一 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
+.tab-cell.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
+<div class="back"><a href="/">← 返回首页</a></div>
 
-<div class="card">
-    <h2 id="statusTitle">正在連接帳戶...</h2>
-    <p id="emailDisplay" class="status-text"></p>
-    <div id="actionArea"></div>
+<div class="load-box" id="loadWrap">
+  <h3 id="loadingTitle">加载中...</h3>
+  <div id="metaDetails" style="display:none">
+    <p>会员等级：<span id="levelText"></span></p>
+    <p>累计消费美金：$<span id="spendText"></span></p>
+  </div>
+</div>
+
+<div id="infoWrap" style="display:none">
+  <div class="item-box">
+    <p>邮箱</p>
+    <p id="userEmail">未填写</p>
+  </div>
+  <div class="item-box">
+    <p>修改登录密码</p>
+    <p>点击跳转</p>
+  </div>
+  <div class="item-box">
+    <p>我的全部行程订单</p>
+    <p>点击查看</p>
+  </div>
+  <button class="logout-btn" id="logoutBtn">退出登录</button>
+</div>
+
+<div class="bottom-tab">
+  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
+  <div class="tab-cell active"><p>账户</p></div>
 </div>
 
 <script>
-const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-const clerk = new Clerk(CLERK_PUB_KEY);
+// 使用 window 的 load 事件确保 Clerk SDK 脚本加载完毕
+window.addEventListener("load", async function() {
+  try {
+    // 2. 标准 Vanilla JS 初始化与加载方式
+    await Clerk.load();
 
-async function initAccount() {
-    try {
-        await clerk.load({ localization: { locale: "zh-HK" } });
-        const title = document.getElementById("statusTitle");
-        const email = document.getElementById("emailDisplay");
-        const action = document.getElementById("actionArea");
+    const loadWrap = document.getElementById("loadWrap");
+    const infoWrap = document.getElementById("infoWrap");
 
-        if (clerk.user) {
-            title.innerText = "您已登入";
-            email.innerText = clerk.user.emailAddresses[0].emailAddress;
-            action.innerHTML = `<button class="btn" onclick="clerk.signOut().then(() => location.reload())">登出帳號</button>`;
-        } else {
-            title.innerText = "您尚未登入";
-            action.innerHTML = `<button class="btn" onclick="window.location.href='https://clerk.accounts.dev/sign-in'">前往登入頁面</button>`;
-        }
-    } catch (err) {
-        document.getElementById("statusTitle").innerText = "連接錯誤";
-        console.error(err);
+    // 3. 检查登录状态
+    if (!Clerk.user) {
+      // 如果未登录，不踢回首页，而是直接在当前页面弹出 Clerk 官方的高级登录/注册弹窗（含 GitHub 登录）
+      Clerk.openSignIn({
+        afterSignInUrl: window.location.href, // 登录成功后刷新当前页
+        afterSignUpUrl: window.location.href
+      });
+      document.getElementById("loadingTitle").innerText = "请先登录账户";
+      return;
     }
-}
 
-window.onload = initAccount;
+    // 已登录：读取并填充用户数据
+    const user = Clerk.user;
+    const level = user.publicMetadata?.member_level || "银级会员";
+    const spend = user.publicMetadata?.total_spend || 0;
+    const email = user.emailAddresses[0]?.emailAddress || "未填写";
+
+    // 更新 DOM 渲染
+    document.getElementById("loadingTitle").innerText = "欢迎回来！";
+    document.getElementById("levelText").innerText = level;
+    document.getElementById("spendText").innerText = spend;
+    document.getElementById("userEmail").innerText = email;
+    
+    // 显示对应的资料区域
+    document.getElementById("metaDetails").style.display = "block";
+    infoWrap.style.display = "block";
+
+    // 4. 退出登录逻辑
+    document.getElementById("logoutBtn").onclick = async () => {
+      await Clerk.signOut();
+      window.location.href = "/"; // 退出后跳转回首页
+    }
+
+  } catch (error) {
+    console.error("Clerk 初始化失败:", error);
+    document.getElementById("loadingTitle").innerText = "同步账户信息失败，请刷新重试";
+  }
+});
 </script>
 </body>
 </html>
