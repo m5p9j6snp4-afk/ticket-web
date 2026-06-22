@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <title>確認預訂</title>
+    <style>body{padding:20px} .pay{width:100%;padding:15px;background:#000;color:#fff;border-radius:10px;border:none;margin-top:20px}</style>
+</head>
+<body>
+    <h2 id="name"></h2>
+    <button class="pay" onclick="pay()">確認支付</button>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('n');
+        document.getElementById('name').innerText = "預訂: " + name;
+        function pay() {
+            let orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            orders.push({ hotelName: name, status: "待確認", time: new Date().toLocaleString() });
+            localStorage.setItem('orders', JSON.stringify(orders));
+            alert('支付成功！');
+            location.href = 'mine.html';
+        }
+    </script>
+</body>
+</html>
