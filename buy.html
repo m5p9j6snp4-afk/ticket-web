@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>填写购票信息 | Re售票</title>
+<!-- Clerk登录SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<title>填写购票信息 | Re旅行</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa}
+body{background:#f7f8fa;padding-bottom:70px}
 nav{background:#0a0e17;padding:14px 16px}
 nav a{color:#fff;text-decoration:none}
 .container{max-width:620px;margin:30px auto;padding:0 14px}
@@ -18,7 +20,12 @@ label{display:block;margin-bottom:8px;font-weight:500;color:#222}
 input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:15px}
 .ticket-block{background:#f4f5fa;padding:14px;border-radius:10px;margin:12px 0}
 .ticket-title{font-weight:600;margin-bottom:8px}
-.btn-sub{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;margin-top:10px}
+.btn-sub{width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:16px;margin-top:10px;cursor:pointer}
+/* 底部导航统一样式 */
+.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #eee;z-index:999}
+.tab-cell{flex:1;text-align:center;padding:10px 0;cursor:pointer}
+.tab-cell p{font-size:12px;color:#777;margin-top:3px;pointer-events:none}
+.tab-cell.active p{color:#111;font-weight:500}
 </style>
 </head>
 <body>
@@ -45,14 +52,39 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 
   <button class="btn-sub" onclick="submitOrder()">提交订单</button>
 </div>
+
+<!-- 全站统一底部导航 -->
+<div class="bottom-tab">
+  <div class="tab-cell" onclick="location.href='/'"><p>首页</p></div>
+  <div class="tab-cell" onclick="location.href='/message.html'"><p>讯息</p></div>
+  <div class="tab-cell" onclick="location.href='/admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
+  <div class="tab-cell" onclick="location.href='/account.html'"><p>账户</p></div>
+</div>
+
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
+const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
+const clerk = new Clerk(CLERK_PUB_KEY);
+
 const urlParams = new URLSearchParams(location.search);
 const eventId = urlParams.get("id");
 const selectSeats = urlParams.get("seats");
 const total = urlParams.get("total");
 const seatCount = Number(urlParams.get("count"));
 let eventData = {};
+
+// 页面初始化：Clerk登录校验
+window.onload = async function(){
+  await clerk.load();
+  const user = clerk.user;
+  if(!user){
+    alert("请先登录账号后再购票");
+    location.href="/";
+    return;
+  }
+  loadEvent();
+}
 
 async function loadEvent(){
   const allRes = await fetch(`${API_BASE}/api/events`);
@@ -108,7 +140,7 @@ async function submitOrder(){
     body:JSON.stringify({
       eventName:eventData.name,
       price:total,
-      username:nameList.join("、"), // 多名观演人用顿号拼接存入数据库
+      username:nameList.join("、"),
       contact,
       email
     })
@@ -120,7 +152,6 @@ async function submitOrder(){
     alert("订单创建失败，请重试");
   }
 }
-loadEvent();
 </script>
 </body>
 </html>
