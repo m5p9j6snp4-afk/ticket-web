@@ -135,10 +135,16 @@ body{background:#f8f9fa;padding-bottom:70px;color:#1d1d1f}
 <script>
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
 
-// 3. 规范标准 Vanilla JS 状态生命周期监听
+// 绑定标准生命周期监听
 window.addEventListener("load", async function(){
   try {
-    await Clerk.load();
+    // 核心更改：显式在 JavaScript 初始化阶段注入中文语言配置，解决 URL 解析慢的问题
+    await Clerk.load({
+      localization: {
+        locale: "zh-CN"
+      }
+    });
+    
     const memberBtn = document.getElementById("memberBtn");
     const user = Clerk.user;
 
@@ -159,7 +165,7 @@ window.addEventListener("load", async function(){
   loadEvents();
 });
 
-// 4. 彻底解决点击死循环/不跳转问题：直接放行交给账户页处理
+// 点击直接跳转，让 account.html 决定触发行为，防止首页卡顿死循环
 function goAccount(){
   location.href = "/account.html";
 }
