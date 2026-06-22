@@ -7,7 +7,7 @@
   async 
   crossorigin="anonymous" 
   data-clerk-publishable-key="pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ" 
-  src="https://top-ant-1.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js?_clerk_locale=zh-CN" 
+  src="https://top-ant-1.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js" 
   type="text/javascript">
 </script>
 <title>账户 | Re旅行</title>
@@ -68,10 +68,26 @@ body{background:#f7f8fa;padding-bottom:70px}
 <script>
 window.addEventListener("load", async function() {
   try {
-    // 核心更改：显式在 JavaScript 初始化阶段注入中文语言配置，彻底干掉英文弹窗
+    // 核心更改：显式在 JavaScript 阶段手工注入翻译映射，强制覆盖英文
     await Clerk.load({
       localization: {
-        locale: "zh-CN"
+        signIn: {
+          start: {
+            title: "登录 Re旅行",
+            subtitle: "使用您的社交账号继续",
+            actionText: "没有账号？",
+            actionLink: "现在注册"
+          }
+        },
+        signUp: {
+          start: {
+            title: "创建新账户",
+            subtitle: "加入 Re旅行 开始您的行程",
+            actionText: "已有账号？",
+            actionLink: "立即登录"
+          }
+        },
+        socialButtonsBlockButton: "使用 {{provider|titleize}} 登录"
       }
     });
 
@@ -80,7 +96,7 @@ window.addEventListener("load", async function() {
 
     // 检查登录状态
     if (!Clerk.user) {
-      // 未登录直接弹出中文登录弹窗
+      // 未登录直接弹出带有我们中文配置的登录弹窗
       Clerk.openSignIn({
         afterSignInUrl: window.location.href, 
         afterSignUpUrl: window.location.href
