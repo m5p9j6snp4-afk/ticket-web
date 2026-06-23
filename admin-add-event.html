@@ -4,105 +4,97 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
-<title>發布新演唱會 | Re旅行商家後台</title>
+<title>管理后台 | Re旅行</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f7f8fa;padding-bottom:100px;color:#333}
-nav{background:#0a0e17;padding:16px;color:#fff;display:flex;justify-content:space-between;align-items:center}
-nav a{color:#fff;text-decoration:none;font-size:14px}
-.container{max-width:600px;margin:20px auto;padding:0 16px}
-h2{font-size:20px;font-weight:600;margin-bottom:20px;color:#1e293b}
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#475569}
-.form-group input, .form-group select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;background:#fff}
-.zone-row{display:flex;gap:10px;margin-bottom:10px;align-items:center}
-.zone-row input{flex:1}
-.btn-remove-zone{background:#ef4444;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
-.btn-add-zone{background:#e2e8f0;color:#334155;border:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:16px}
-.btn-submit{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,0.2);margin-top:10px}
-.bottom-tab{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;border-top:1px solid #e2e8f0;z-index:999}
-.tab-cell{flex:1;text-align:center;padding:12px 0;cursor:pointer}
-.tab-cell p{font-size:12px;color:#64748b;margin-top:4px;pointer-events:none}
-.tab-cell.active p{color:#0f172a;font-weight:600}
+    *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+    body{background:#f7f8fa;padding-bottom:100px}
+    #mainContent{display:none;} /* 默认隐藏所有内容 */
+    .container{max-width:600px;margin:20px auto;padding:0 16px}
+    h2{margin:20px 0;color:#1e293b}
+    .card{background:#fff;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+    .form-group{margin-bottom:15px}
+    input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+    .btn{background:#000;color:#fff;padding:12px;border:none;border-radius:8px;width:100%;cursor:pointer;margin-top:10px}
+    .tab-btn{padding:8px 16px;background:#e2e8f0;border:none;border-radius:6px;margin-right:5px;cursor:pointer}
+    .tab-btn.active{background:#000;color:#fff}
+    .order-item{border-bottom:1px solid #eee;padding:15px 0}
 </style>
 </head>
 <body>
 
-<nav>
-  <a href="/">← 返回首頁</a>
-  <span>商家工作台</span>
-</nav>
-
-<div class="container">
-  <h2>發布全新熱門演唱會</h2>
-  <div class="form-group"><label>演唱會/活動名稱</label><input type="text" id="eventName" placeholder="例如：周杰倫 2026 世界巡迴演唱會"></div>
-  <div class="form-group"><label>演出日期與時間</label><input type="text" id="eventDate" placeholder="例如：2026年11月20日 20:00"></div>
-  <div class="form-group"><label>海報圖片網址 (Image URL)</label><input type="text" id="eventPoster" placeholder="請貼上圖片連結"></div>
-  <div class="form-group"><label>起步票價 (HK$)</label><input type="number" id="eventPrice" placeholder="最低起步價，例如：780"></div>
-  <div class="form-group">
-    <label style="font-weight: 600; color: #1e293b;">配置座位分區與具體票價</label>
-    <div id="zonesContainer">
-      <div class="zone-row"><input type="text" class="zone-name" placeholder="分區名稱 (如: 內場A區)"><input type="number" class="zone-price" placeholder="價格 (如: 1380)"></div>
+<div id="mainContent" class="container">
+    <h2>发佈新演唱会</h2>
+    <div class="card">
+        <input type="text" id="eventName" placeholder="活动名称" style="margin-bottom:10px">
+        <input type="text" id="eventDate" placeholder="时间 (如: 2026-11-20)" style="margin-bottom:10px">
+        <input type="number" id="eventPrice" placeholder="起步价 (HK$)" style="margin-bottom:10px">
+        <button class="btn" onclick="submitEvent()">确认发布</button>
     </div>
-    <button type="button" class="btn-add-zone" onclick="addZoneField()">＋ 增加一個座位分區</button>
-  </div>
-  <button class="btn-submit" onclick="submitEvent()">確認發布並同步到首頁</button>
-</div>
 
-<div class="bottom-tab">
-  <div class="tab-cell" onclick="location.href='/'"><p>首頁</p></div>
-  <div class="tab-cell" onclick="location.href='/message.html'"><p>訊息</p></div>
-  <div class="tab-cell active"><p>發布</p></div>
-  <div class="tab-cell" onclick="location.href='/mine.html'"><p>我的行程</p></div>
-  <div class="tab-cell" onclick="location.href='/account.html'"><p>帳戶</p></div>
+    <h2>全站订单状态</h2>
+    <div style="margin-bottom:15px">
+        <button class="tab-btn active" onclick="filterOrder('all', this)">总订单</button>
+        <button class="tab-btn" onclick="filterOrder('unpaid', this)">未付款</button>
+        <button class="tab-btn" onclick="filterOrder('paid', this)">已付款</button>
+    </div>
+    <div id="orderList" class="card"></div>
 </div>
 
 <script>
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-const clerk = new Clerk(CLERK_PUB_KEY);
-const ADMIN_EMAIL = "1477rene@gmail.com"; // 请替换成你的管理员邮箱
+const ADMIN_EMAIL = "your-email@example.com"; // ⚠️ 请替换为你的管理员邮箱
 const API_BASE = "https://hidden-mouse-2636.bmk4byvf9b.workers.dev";
-let adminPwd = "Rene 12345678";
+const clerk = new Clerk(CLERK_PUB_KEY);
+let allOrders = [];
 
-// 权限拦截器：页面加载即检查
 window.onload = async () => {
     await clerk.load();
+    // 权限守门员：不是管理员直接踢回首页
     if (!clerk.user || clerk.user.primaryEmailAddress.emailAddress !== ADMIN_EMAIL) {
-        alert("⚠️ 權限不足：此頁面僅限管理員訪問");
         location.href = "/";
         return;
     }
+    // 权限通过，显示内容
+    document.getElementById('mainContent').style.display = 'block';
+    loadOrders();
 };
 
-function addZoneField() {
-  const container = document.getElementById("zonesContainer");
-  const div = document.createElement("div");
-  div.className = "zone-row";
-  div.innerHTML = `<input type="text" class="zone-name" placeholder="分區名稱"><input type="number" class="zone-price" placeholder="價格"><button type="button" class="btn-remove-zone" onclick="this.parentElement.remove()">刪除</button>`;
-  container.appendChild(div);
+async function loadOrders() {
+    const res = await fetch(`${API_BASE}/api/admin/list?pwd=Rene 12345678`);
+    allOrders = await res.json();
+    renderOrders(allOrders);
+}
+
+function renderOrders(list) {
+    const box = document.getElementById('orderList');
+    box.innerHTML = list.length ? list.map(o => `
+        <div class="order-item">
+            <p><b>${o.event_name}</b> - ${o.username}</p>
+            <p>状态: ${o.status === 'paid' ? '✅ 已收款' : '❌ 未付款'}</p>
+            ${o.status === 'unpaid' ? `<button onclick="confirmPay('${o.order_no}')">确认收到款项</button>` : ''}
+        </div>
+    `).join('') : "<p>暂无订单</p>";
+}
+
+function filterOrder(status, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderOrders(status === 'all' ? allOrders : allOrders.filter(o => o.status === status));
 }
 
 async function submitEvent() {
-  const name = document.getElementById("eventName").value.trim();
-  const date = document.getElementById("eventDate").value.trim();
-  const poster = document.getElementById("eventPoster").value.trim();
-  const price = document.getElementById("eventPrice").value.trim();
-  if (!name || !date || !price) return alert("請填寫必填項！");
-  
-  const zones = Array.from(document.querySelectorAll(".zone-row")).map(row => ({
-    name: row.querySelector(".zone-name").value,
-    price: Number(row.querySelector(".zone-price").value)
-  })).filter(z => z.name && z.price);
-
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/add-event`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pwd: adminPwd, name, date, poster, price: Number(price), zones })
+    const data = {
+        pwd: "Rene 12345678",
+        name: document.getElementById('eventName').value,
+        date: document.getElementById('eventDate').value,
+        price: Number(document.getElementById('eventPrice').value)
+    };
+    await fetch(`${API_BASE}/api/admin/add-event`, {
+        method: "POST",
+        body: JSON.stringify(data)
     });
-    if (res.ok) { alert("🎉 發布成功！"); location.href = "/"; }
-    else alert("發布失敗");
-  } catch (err) { alert("網路錯誤"); }
+    alert("发布成功");
+    location.reload();
 }
 </script>
 </body>
