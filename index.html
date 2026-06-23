@@ -10,7 +10,7 @@
 body{background:#f7f8fa;padding-bottom:90px}
 header{background:#000;color:#fff;padding:30px 20px;display:flex;justify-content:space-between;align-items:flex-start}
 .header-left h1{font-size:26px;font-weight:600}
-/* 默认隐藏管理员标签 */
+/* 管理员标签：默认隐藏 */
 .admin-tag{background:#333;padding:8px 14px;border-radius:20px;font-size:14px;display:none}
 .container{padding:20px}
 .grid-row1{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
@@ -26,9 +26,7 @@ header{background:#000;color:#fff;padding:30px 20px;display:flex;justify-content
 </head>
 <body>
 <header>
-    <div class="header-left">
-        <h1>Re旅行</h1>
-    </div>
+    <div class="header-left"><h1>Re旅行</h1></div>
     <div id="adminTag" class="admin-tag">超级管理员</div>
 </header>
 
@@ -46,38 +44,31 @@ header{background:#000;color:#fff;padding:30px 20px;display:flex;justify-content
         <div class="func-btn" onclick="location.href='more.html'"><p>更多</p></div>
     </div>
     <input class="search-box" placeholder="搜索目的地、航班、演唱会">
-    <h3 style="color:#666;margin-bottom:10px">限时优惠</h3>
-    <div class="discount-row">
-        <div class="func-btn" onclick="location.href='discount-concert.html'">演唱会折扣</div>
-        <div class="func-btn" onclick="location.href='discount-flight.html'">机票满减</div>
-    </div>
-    <h3 style="color:#666;margin-bottom:10px">热门演唱会</h3>
-    <div style="background:#fff;height:120px;border-radius:14px"></div>
 </div>
 
 <div class="bottom-tab">
   <div class="tab-cell active" onclick="location.href='index.html'"><p>首页</p></div>
   <div class="tab-cell" onclick="location.href='message.html'"><p>讯息</p></div>
-  <div class="tab-cell" onclick="location.href='admin-add-event.html'"><p>发布</p></div>
+  <div class="tab-cell" id="publishTab" style="display:none;" onclick="location.href='admin-add-event.html'"><p>发布</p></div>
   <div class="tab-cell" onclick="location.href='mine.html'"><p>我的行程</p></div>
   <div class="tab-cell" onclick="location.href='account.html'"><p>账户</p></div>
 </div>
 
 <script>
 const CLERK_PUB_KEY = "pk_test_dG9wLWFudC0xLmNsZXJrLmFjY291bnRzLmRldiQ";
-const clerk = new Clerk(CLERK_PUB_KEY);
-
-// 你的管理员邮箱，请修改为你实际用于登录的账号
 const ADMIN_EMAIL = "1477rene@gmail.com"; 
+const clerk = new Clerk(CLERK_PUB_KEY);
 
 window.onload = async () => {
     await clerk.load({ localization: { locale: "zh-HK" } });
     
-    // 如果已登录，检查是否为管理员
+    // 如果已登录，检查身份
     if (clerk.user) {
         const userEmail = clerk.user.primaryEmailAddress.emailAddress;
         if (userEmail === ADMIN_EMAIL) {
+            // 是管理员：显示标签和发布入口
             document.getElementById('adminTag').style.display = 'block';
+            document.getElementById('publishTab').style.display = 'block';
         }
     }
 }
